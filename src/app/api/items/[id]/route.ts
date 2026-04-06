@@ -36,12 +36,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    await prisma.item.delete({
-      where: { id: params.id }
+    await prisma.item.update({
+      where: { id: params.id },
+      data: { isDeleted: true }
     });
-
-    return NextResponse.json({ message: "Item deleted successfully" });
+    console.log(`[ADMIN] Item ${params.id} soft-deleted.`); // Professional Logging
+    return NextResponse.json({ message: "Item archived successfully" });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to delete item" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to archive item" }, { status: 500 });
   }
 }

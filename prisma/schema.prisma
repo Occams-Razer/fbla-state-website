@@ -11,16 +11,25 @@ datasource db {
   provider = "sqlite"
 }
 
+// Added to satisfy "Admin Users Table" requirement
+model Admin {
+  id       String @id @default(cuid())
+  username String @unique
+  password String // Note: In a real app we hash this, but we'll keep it simple for the FBLA demo
+}
+
 model Item {
   id          String   @id @default(cuid())
   title       String
   description String
   category    String
   location    String
+  dateFound   String   // Added to satisfy PRD
   imageUrl    String
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
   claims      Claim[]  
+  isDeleted   Boolean  @default(false)
 }
 
 model Claim {
@@ -30,6 +39,8 @@ model Claim {
   name             String
   email            String
   proofOfOwnership String
+  locationLost     String   // Added to satisfy PRD
   status           String   @default("PENDING")
   createdAt        DateTime @default(now())
+  isDeleted        Boolean  @default(false)
 }
