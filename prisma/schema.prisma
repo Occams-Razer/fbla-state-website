@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  location    String
+  imageUrl    String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  claims      Claim[]  
+}
+
+model Claim {
+  id               String   @id @default(cuid())
+  itemId           String
+  item             Item     @relation(fields: [itemId], references: [id])
+  name             String
+  email            String
+  proofOfOwnership String
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+}
