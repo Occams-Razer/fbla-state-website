@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const sort = searchParams.get('sort');
 
     // Requirement: Only return APPROVED items that are NOT soft-deleted
-    const whereClause: Prisma.ItemWhereInput = {
+    const whereClause: Record<string, unknown> = {
       status: 'APPROVED',
       isDeleted: false, 
     };
@@ -31,8 +31,10 @@ export async function GET(request: Request) {
     }
 
     // Requirement: Date Sorting
-    const orderByClause: Prisma.ItemOrderByWithRelationInput = 
-      sort === 'oldest' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+    const orderByClause =
+      sort === 'oldest'
+        ? { createdAt: 'asc' as const }
+        : { createdAt: 'desc' as const };
 
     console.log(`[SERVER] Fetching public items. Filter: ${category || 'none'}, Search: ${search || 'none'}`);
 

@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newClaim, { status: 201 });
   } catch (error) {
+    console.error("[ERROR] Failed to submit claim", error);
     return NextResponse.json({ error: "Failed to submit claim" }, { status: 500 });
   }
 }
@@ -31,6 +32,7 @@ export async function GET() {
     });
     return NextResponse.json(claims);
   } catch (error) {
+    console.error("[ERROR] Failed to fetch claims", error);
     return NextResponse.json({ error: "Failed to fetch claims" }, { status: 500 });
   }
 }
