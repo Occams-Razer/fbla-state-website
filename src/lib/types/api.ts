@@ -42,6 +42,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   authenticated: boolean;
+  username?: string;
 }
 
 export interface UploadImageResponse {

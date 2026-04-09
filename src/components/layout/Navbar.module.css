@@ -73,6 +73,57 @@
   background: var(--color-primary-hover);
 }
 
+.authPlaceholder {
+  height: 2.25rem;
+  width: 4.5rem;
+}
+
+.profileGroup {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+}
+
+.profileBadge {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  transition: background-color 180ms ease;
+}
+
+.profileBadge:hover {
+  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.profileIcon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.signOut {
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  transition: border-color 180ms ease, color 180ms ease;
+}
+
+.signOut:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
 @media (max-width: 720px) {
   .inner {
     padding: var(--space-3) var(--space-4);

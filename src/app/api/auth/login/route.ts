@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     const token = await createSessionToken(admin.id, admin.username);
-    const response = NextResponse.json({ authenticated: true });
+    const response = NextResponse.json({ authenticated: true, username: admin.username });
     setSessionCookie(response, token);
     return response;
   } catch (error) {

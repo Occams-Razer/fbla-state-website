@@ -7,3 +7,18 @@ export async function loginAdmin(payload: LoginRequest) {
     method: "POST",
   });
 }
+
+export async function logoutAdmin() {
+  return request<{ ok: boolean }>("/api/auth/logout", { method: "POST" });
+}
+
+export async function updateAdminProfile(payload: {
+  currentPassword: string;
+  newUsername?: string;
+  newPassword?: string;
+}) {
+  return request<{ ok: boolean }>("/api/admin/profile", {
+    body: JSON.stringify(payload),
+    method: "PATCH",
+  });
+}
