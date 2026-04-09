@@ -1,0 +1,57 @@
+import type { ClaimStatus, ItemStatus } from "./domain";
+
+export type ItemSortOrder = "newest" | "oldest";
+
+export interface ItemListQuery {
+  search?: string;
+  category?: string;
+  sort?: ItemSortOrder;
+}
+
+export interface CreateItemInput {
+  title: string;
+  category: string;
+  imageUrl: string;
+  description?: string;
+  location?: string;
+  dateFound?: string;
+  submitterName?: string;
+  submitterEmail?: string;
+}
+
+export interface UpdateItemStatusInput {
+  status: ItemStatus;
+}
+
+export interface CreateClaimInput {
+  itemId: string;
+  name: string;
+  email: string;
+  proofOfOwnership: string;
+  locationLost: string;
+}
+
+export interface UpdateClaimStatusInput {
+  status: ClaimStatus;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  authenticated: boolean;
+}
+
+export interface UploadImageResponse {
+  url: string;
+}
+
+export interface MutationMessage {
+  message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
