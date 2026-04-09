@@ -1,22 +1,27 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { itemCreateSchema, itemListQuerySchema, formatZodError } from "@/lib/schemas";
+import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
-const prisma = new PrismaClient();
+const ITEM_POST_WINDOW_MS = 60 * 1000;
+const ITEM_POST_MAX = 10;
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-    const category = searchParams.get('category');
-    const sort = searchParams.get('sort');
+    const raw = Object.fromEntries(searchParams.entries());
+    const parsed = itemListQuerySchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 });
+    }
+    const { search, category, sort, page, limit } = parsed.data;
 
-    // Requirement: Only return APPROVED items that are NOT soft-deleted
     const whereClause: Prisma.ItemWhereInput = {
-      status: 'APPROVED',
-      isDeleted: false, 
+      status: "APPROVED",
+      isDeleted: false,
     };
 
-    // Requirement: Search Logic
     if (search) {
       whereClause.OR = [
         { title: { contains: search } },
@@ -25,23 +30,34 @@ export async function GET(request: Request) {
       ];
     }
 
-    // Requirement: Category Filtering
     if (category) {
       whereClause.category = category;
     }
 
-    // Requirement: Date Sorting
-    const orderByClause: Prisma.ItemOrderByWithRelationInput = 
-      sort === 'oldest' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+    const orderByClause: Prisma.ItemOrderByWithRelationInput =
+      sort === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" };
 
-    console.log(`[SERVER] Fetching public items. Filter: ${category || 'none'}, Search: ${search || 'none'}`);
+    const skip = (page - 1) * limit;
 
-    const items = await prisma.item.findMany({
-      where: whereClause,
-      orderBy: orderByClause,
+    const [items, total] = await prisma.$transaction([
+      prisma.item.findMany({
+        where: whereClause,
+        orderBy: orderByClause,
+        skip,
+        take: limit,
+      }),
+      prisma.item.count({ where: whereClause }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    return NextResponse.json({
+      items,
+      total,
+      page,
+      pageSize: limit,
+      totalPages,
     });
-
-    return NextResponse.json(items);
   } catch (error) {
     console.error("[ERROR] Failed to fetch items:", error);
     return NextResponse.json({ error: "Failed to fetch items" }, { status: 500 });
@@ -49,34 +65,48 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limited = rateLimit(`item-post:${ip}`, ITEM_POST_MAX, ITEM_POST_WINDOW_MS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please wait and try again." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(limited.retryAfterSec),
+        },
+      },
+    );
+  }
+
   try {
     const body = await request.json();
-    console.log(`[SERVER] New item submission attempt: "${body.title}"`);
-
-    // Requirement: Robust Validation
-    if (!body.title || !body.category || !body.imageUrl) {
-      console.log(`[REJECTED] Missing required fields for item submission.`);
-      return NextResponse.json(
-        { error: "Title, category, and photo are required." }, 
-        { status: 400 }
-      );
+    const parsed = itemCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 });
     }
+    const data = parsed.data;
 
     const newItem = await prisma.item.create({
       data: {
-        title: body.title,
-        description: body.description || "",
-        category: body.category,
-        location: body.location || "",
-        dateFound: body.dateFound || "",
-        imageUrl: body.imageUrl,
-        // Status defaults to PENDING in schema
-        // isDeleted defaults to false in schema
-      }
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        location: data.location,
+        dateFound: data.dateFound,
+        imageUrl: data.imageUrl,
+      },
     });
 
-    console.log(`[SUCCESS] Item created with ID: ${newItem.id}`);
-    return NextResponse.json(newItem, { status: 201 });
+    const response = NextResponse.json(
+      {
+        ...newItem,
+        message: "Item submitted for review. It will appear after approval.",
+      },
+      { status: 201 },
+    );
+    Object.entries(rateLimitHeaders(limited)).forEach(([k, v]) => response.headers.set(k, v));
+    return response;
   } catch (error) {
     console.error(`[ERROR] Item creation failed:`, error);
     return NextResponse.json({ error: "Failed to submit item" }, { status: 500 });

@@ -1,23 +1,40 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
-const prisma = new PrismaClient();
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
+
+const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // Hash the password before saving (10 "rounds" of scrambling)
-  const hashedAdminPassword = await bcrypt.hash('fbla_password2026', 10);
+  const rawPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!rawPassword || rawPassword.length < 8) {
+    throw new Error(
+      "Set SEED_ADMIN_PASSWORD in .env (min 8 characters) before running seed.",
+    );
+  }
+  const hashedAdminPassword = await bcrypt.hash(rawPassword, 10);
 
   await prisma.admin.upsert({
-    where: { username: 'admin' },
-    update: {},
+    where: { username: "admin" },
+    update: { password: hashedAdminPassword },
     create: {
-      username: 'admin',
-      password: hashedAdminPassword, 
+      username: "admin",
+      password: hashedAdminPassword,
     },
   });
 
-  // (Optional: You can keep your item/claim creation code here as well)
-
-  console.log('Database seeded with ENCRYPTED admin credentials!');
+  console.log("Database seeded with ENCRYPTED admin credentials!");
 }
 
-main().catch((e) => { console.error(e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

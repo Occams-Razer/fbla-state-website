@@ -1,41 +1,57 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/lib/auth";
+import { claimPatchSchema, formatZodError } from "@/lib/schemas";
 
-const prisma = new PrismaClient();
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireAdminSession(request);
+  if (auth instanceof NextResponse) return auth;
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
-    
-    // 1. Update the claim status (e.g., 'APPROVED' or 'REJECTED')
+    const parsed = claimPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 });
+    }
+
     const updatedClaim = await prisma.claim.update({
-      where: { id: params.id },
-      data: { status: body.status }
+      where: { id },
+      data: { status: parsed.data.status },
     });
 
-    // 2. If the admin approves the claim, automatically mark the actual item as 'CLAIMED'
-    if (body.status === 'APPROVED') {
+    if (parsed.data.status === "APPROVED") {
       await prisma.item.update({
         where: { id: updatedClaim.itemId },
-        data: { status: 'CLAIMED' }
+        data: { status: "CLAIMED" },
       });
     }
 
     return NextResponse.json(updatedClaim);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update claim status" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireAdminSession(request);
+  if (auth instanceof NextResponse) return auth;
+
   try {
-    // Delete the specific claim from the database
-    await prisma.claim.delete({
-      where: { id: params.id }
+    const { id } = await context.params;
+    await prisma.claim.update({
+      where: { id },
+      data: { isDeleted: true },
     });
 
-    return NextResponse.json({ message: "Claim deleted successfully" });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to delete claim" }, { status: 500 });
+    return NextResponse.json({ message: "Claim archived successfully" });
+  } catch {
+    return NextResponse.json({ error: "Failed to archive claim" }, { status: 500 });
   }
 }
