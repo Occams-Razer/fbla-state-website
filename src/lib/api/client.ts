@@ -90,6 +90,7 @@ export async function request<T, TQuery = unknown>(
   const response = await fetch(url, {
     ...init,
     headers: finalHeaders,
+    credentials: init.credentials ?? "include",
   });
 
   if (!response.ok) {

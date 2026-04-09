@@ -2,13 +2,14 @@ import type {
   CreateItemInput,
   Item,
   ItemListQuery,
+  ItemListResponse,
   MutationMessage,
   UpdateItemStatusInput,
 } from "@/lib/types";
 import { request } from "./client";
 
 export async function fetchItems(query?: ItemListQuery) {
-  return request<Item[]>("/api/items", { query });
+  return request<ItemListResponse>("/api/items", { query });
 }
 
 export async function fetchItemById(itemId: string) {
@@ -16,7 +17,7 @@ export async function fetchItemById(itemId: string) {
 }
 
 export async function createItem(payload: CreateItemInput) {
-  return request<Item>("/api/items", {
+  return request<Item & { message?: string }>("/api/items", {
     body: JSON.stringify(payload),
     method: "POST",
   });

@@ -71,6 +71,7 @@ export function SearchBrowsePage() {
   const searchParams = useSearchParams();
   const [isSubmitting, startTransition] = useTransition();
   const [items, setItems] = useState<Item[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -104,7 +105,8 @@ export function SearchBrowsePage() {
         });
 
         if (!ignore) {
-          setItems(results);
+          setItems(results.items);
+          setTotalCount(results.total);
         }
       } catch (fetchError) {
         if (ignore) {
@@ -230,7 +232,7 @@ export function SearchBrowsePage() {
         <div className={styles.resultsHeader}>
           <h2 className={styles.resultsTitle}>Listings</h2>
           <p className={styles.resultsCount}>
-            {loading ? "Loading listings..." : pluralizeResults(items.length)}
+            {loading ? "Loading listings..." : pluralizeResults(totalCount)}
           </p>
         </div>
 

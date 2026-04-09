@@ -84,7 +84,7 @@ export function AdminDashboardPage() {
       try {
         const results = await fetchAdminItems();
         if (!ignore) {
-          setItems(results);
+          setItems(results.items);
         }
       } catch (error) {
         if (ignore) {
@@ -110,7 +110,7 @@ export function AdminDashboardPage() {
       try {
         const results = await fetchClaims();
         if (!ignore) {
-          setClaims(results);
+          setClaims(results.claims);
         }
       } catch (error) {
         if (ignore) {

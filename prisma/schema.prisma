@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Admin {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  location    String
+  dateFound   String
+  imageUrl    String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+
+  claims Claim[]
+}
+
+model Claim {
+  id              String   @id @default(cuid())
+  itemId          String
+  name            String
+  email           String
+  proofOfOwnership String
+  locationLost    String
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  isDeleted       Boolean  @default(false)
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+}

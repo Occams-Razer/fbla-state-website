@@ -1,17 +1,24 @@
 import type {
   Claim,
+  ClaimsListResponse,
   CreateClaimInput,
   MutationMessage,
   UpdateClaimStatusInput,
 } from "@/lib/types";
 import { request } from "./client";
 
-export async function fetchClaims() {
-  return request<Claim[]>("/api/claims");
+export async function fetchClaims(query?: { page?: number; limit?: number }) {
+  return request<ClaimsListResponse>("/api/claims", {
+    query: {
+      page: 1,
+      limit: 100,
+      ...query,
+    },
+  });
 }
 
 export async function createClaim(payload: CreateClaimInput) {
-  return request<Claim>("/api/claims", {
+  return request<Claim & { message?: string }>("/api/claims", {
     body: JSON.stringify(payload),
     method: "POST",
   });

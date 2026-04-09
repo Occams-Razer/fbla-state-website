@@ -1,4 +1,4 @@
-import type { ClaimStatus, ItemStatus } from "./domain";
+import type { Claim, ClaimStatus, Item, ItemStatus } from "./domain";
 
 export type ItemSortOrder = "newest" | "oldest";
 
@@ -54,4 +54,21 @@ export interface MutationMessage {
 
 export interface ErrorResponse {
   error: string;
+}
+
+/** Public catalog + admin item queues return this shape (paginated). */
+export interface ItemListResponse {
+  items: Item[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ClaimsListResponse {
+  claims: Claim[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
