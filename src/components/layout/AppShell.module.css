@@ -1,0 +1,33 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.skipLink {
+  background: var(--color-text);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  left: 1rem;
+  padding: 0.6rem 0.85rem;
+  position: fixed;
+  top: 1rem;
+  transform: translateY(-180%);
+  transition: transform 160ms ease;
+  z-index: 1000;
+}
+
+.skipLink:focus-visible {
+  transform: translateY(0);
+}
+
+.main {
+  flex: 1;
+  padding: var(--space-8) var(--space-6);
+}
+
+@media (max-width: 720px) {
+  .main {
+    padding: var(--space-6) var(--space-4);
+  }
+}

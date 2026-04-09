@@ -1,0 +1,40 @@
+.badge {
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.35rem 0.65rem;
+  white-space: nowrap;
+}
+
+.variant_neutral {
+  background: color-mix(in srgb, var(--color-neutral) 18%, white);
+  border-color: color-mix(in srgb, var(--color-neutral) 40%, transparent);
+  color: var(--color-text);
+}
+
+.variant_success {
+  background: color-mix(in srgb, var(--color-success) 20%, white);
+  border-color: color-mix(in srgb, var(--color-success) 55%, transparent);
+  color: #0f6d33;
+}
+
+.variant_warning {
+  background: color-mix(in srgb, var(--color-warning) 26%, white);
+  border-color: color-mix(in srgb, var(--color-warning) 55%, transparent);
+  color: #7a5600;
+}
+
+.variant_danger {
+  background: color-mix(in srgb, var(--color-danger) 18%, white);
+  border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+  color: #8d2626;
+}
+
+.variant_info {
+  background: color-mix(in srgb, var(--color-info) 20%, white);
+  border-color: color-mix(in srgb, var(--color-info) 50%, transparent);
+  color: #1f4ea1;
+}
