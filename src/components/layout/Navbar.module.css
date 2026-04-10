@@ -28,10 +28,10 @@
   letter-spacing: 0.03em;
 }
 
-.brandMark {
-  color: var(--color-primary);
-  font-size: 1rem;
-  line-height: 1;
+.brandLogo {
+  display: block;
+  height: auto;
+  width: 2.5rem;
 }
 
 .brandText {
@@ -131,6 +131,10 @@
 
   .brandText {
     font-size: 1.2rem;
+  }
+
+  .brandLogo {
+    width: 2.1rem;
   }
 
   .nav {

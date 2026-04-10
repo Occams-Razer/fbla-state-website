@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./Navbar.module.css";
 
@@ -11,9 +12,14 @@ export function Navbar() {
     <header className={styles.header}>
       <div className={styles.inner}>
         <Link className={styles.brand} href="/">
-          <span className={styles.brandMark} aria-hidden="true">
-            ◇
-          </span>
+          <Image
+            alt="Foundry logo"
+            className={styles.brandLogo}
+            height={37}
+            priority
+            src="/logo.svg"
+            width={40}
+          />
           <span className={styles.brandText}>FOUNDRY</span>
         </Link>
 

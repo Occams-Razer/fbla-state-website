@@ -25,9 +25,10 @@
   margin: 0;
 }
 
-.brandMark {
-  color: var(--color-primary);
-  font-size: 1rem;
+.brandLogo {
+  display: block;
+  height: auto;
+  width: 3rem;
 }
 
 .copy {

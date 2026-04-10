@@ -1,29 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Button, Card, Input } from "@/components/ui";
-import {
-  fetchAdminItems,
-  fetchClaims,
-  loginAdmin,
-  updateClaimStatus,
-  updateItemStatus,
-} from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
+import { Button, Card } from "@/components/ui";
+import { fetchAdminItems, fetchClaims, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
 
 type TabKey = "items" | "claims";
 type ItemFilter = "ALL" | ItemStatus;
-
-interface LoginFormState {
-  username: string;
-  password: string;
-}
-
-interface AdminDashboardPageProps {
-  initialAuthenticated?: boolean;
-}
 
 const ITEM_FILTER_OPTIONS: Array<{ label: string; value: ItemFilter }> = [
   { label: "All", value: "ALL" },
@@ -32,11 +17,6 @@ const ITEM_FILTER_OPTIONS: Array<{ label: string; value: ItemFilter }> = [
   { label: "Rejected", value: "REJECTED" },
   { label: "Claimed", value: "CLAIMED" },
 ];
-
-const INITIAL_LOGIN_FORM: LoginFormState = {
-  password: "",
-  username: "",
-};
 
 function formatDate(value: string) {
   const parsedDate = new Date(value);
@@ -51,17 +31,10 @@ function formatDate(value: string) {
   }).format(parsedDate);
 }
 
-export function AdminDashboardPage({
-  initialAuthenticated = false,
-}: AdminDashboardPageProps) {
-  const [loginForm, setLoginForm] = useState<LoginFormState>(INITIAL_LOGIN_FORM);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
-
+export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("items");
   const [itemFilter, setItemFilter] = useState<ItemFilter>("ALL");
-
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
@@ -82,14 +55,6 @@ export function AdminDashboardPage({
   }, [itemFilter, items]);
 
   useEffect(() => {
-    setIsAuthenticated(initialAuthenticated);
-  }, [initialAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-
     let ignore = false;
 
     async function loadItems() {
@@ -108,10 +73,9 @@ export function AdminDashboardPage({
         }
 
         if (isApiError(error) && error.status === 401) {
-          setIsAuthenticated(false);
+          setSessionExpired(true);
           setItems([]);
           setClaims([]);
-          setLoginError("Your session expired. Please sign in again.");
           return;
         }
 
@@ -143,10 +107,9 @@ export function AdminDashboardPage({
         }
 
         if (isApiError(error) && error.status === 401) {
-          setIsAuthenticated(false);
+          setSessionExpired(true);
           setItems([]);
           setClaims([]);
-          setLoginError("Your session expired. Please sign in again.");
           return;
         }
 
@@ -168,47 +131,7 @@ export function AdminDashboardPage({
     return () => {
       ignore = true;
     };
-  }, [isAuthenticated]);
-
-  function updateLoginField(field: keyof LoginFormState, value: string) {
-    setLoginForm((previous) => ({ ...previous, [field]: value }));
-  }
-
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoginError(null);
-
-    if (!loginForm.username.trim() || !loginForm.password.trim()) {
-      setLoginError("Username and password are required.");
-      return;
-    }
-
-    try {
-      setIsLoggingIn(true);
-      setActionError(null);
-      setActionSuccess(null);
-      const response = await loginAdmin({
-        password: loginForm.password,
-        username: loginForm.username.trim(),
-      });
-
-      if (response.authenticated) {
-        setIsAuthenticated(true);
-        setActionSuccess("Logged in. Dashboard data is ready.");
-        setLoginForm(INITIAL_LOGIN_FORM);
-      } else {
-        setLoginError("Invalid credentials.");
-      }
-    } catch (error) {
-      if (isApiError(error)) {
-        setLoginError(error.message);
-      } else {
-        setLoginError("Login failed. Please try again.");
-      }
-    } finally {
-      setIsLoggingIn(false);
-    }
-  }
+  }, []);
 
   async function handleItemStatusChange(item: Item, nextStatus: ItemStatus) {
     setActionError(null);
@@ -260,51 +183,6 @@ export function AdminDashboardPage({
     }
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className={styles.page}>
-        <section aria-labelledby="admin-login-title" className={styles.header}>
-          <h1 className={styles.title} id="admin-login-title">
-            Admin Dashboard Login
-          </h1>
-          <p className={styles.subtitle}>
-            Sign in to review found item submissions and ownership claims.
-          </p>
-        </section>
-
-        <Card className={styles.loginCard}>
-          <form className={styles.loginForm} onSubmit={handleLogin}>
-            <Input
-              autoComplete="username"
-              label="Username"
-              onChange={(event) => updateLoginField("username", event.target.value)}
-              required
-              value={loginForm.username}
-            />
-            <Input
-              autoComplete="current-password"
-              label="Password"
-              onChange={(event) => updateLoginField("password", event.target.value)}
-              required
-              type="password"
-              value={loginForm.password}
-            />
-
-            {loginError ? (
-              <p className={styles.errorText} role="alert">
-                {loginError}
-              </p>
-            ) : null}
-
-            <Button loading={isLoggingIn} size="lg" type="submit">
-              Sign in
-            </Button>
-          </form>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.page}>
       <section aria-labelledby="admin-dashboard-title" className={styles.header}>
@@ -345,6 +223,11 @@ export function AdminDashboardPage({
       {actionSuccess ? (
         <p className={styles.successText} role="status">
           {actionSuccess}
+        </p>
+      ) : null}
+      {sessionExpired ? (
+        <p className={styles.errorText} role="alert">
+          Your session expired. Please refresh and sign in again.
         </p>
       ) : null}
 

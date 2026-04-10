@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
-import { AdminDashboardPage } from "@/components/admin";
+import { AdminLoginPage } from "@/components/admin";
 import { AppShell } from "@/components/layout/AppShell";
 
 export default async function LoginPage() {
@@ -8,9 +9,13 @@ export default async function LoginPage() {
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   const session = sessionCookie ? await verifySessionToken(sessionCookie) : null;
 
+  if (session) {
+    redirect("/admin");
+  }
+
   return (
     <AppShell>
-      <AdminDashboardPage initialAuthenticated={Boolean(session)} />
+      <AdminLoginPage />
     </AppShell>
   );
 }
