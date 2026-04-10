@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import { fetchAdminItems, fetchClaims, logoutAdmin, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -31,7 +31,7 @@ function formatDate(value: string) {
   }).format(parsedDate);
 }
 
-export function AdminDashboardPage() {
+export function AdminDashboardPage({ username }: { username: string }) {
   const [activeTab, setActiveTab] = useState<TabKey>("items");
   const [itemFilter, setItemFilter] = useState<ItemFilter>("ALL");
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -181,15 +181,31 @@ export function AdminDashboardPage() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await logoutAdmin();
+    } catch {
+      // ignore
+    }
+    window.location.href = "/login";
+  }
+
   return (
     <div className={styles.page}>
       <section aria-labelledby="admin-dashboard-title" className={styles.header}>
-        <h1 className={styles.title} id="admin-dashboard-title">
-          Admin Dashboard
-        </h1>
-        <p className={styles.subtitle}>
-          Moderate item listings and resolve claim requests.
-        </p>
+        <div className={styles.headerRow}>
+          <div>
+            <h1 className={styles.title} id="admin-dashboard-title">
+              Admin Dashboard
+            </h1>
+            <p className={styles.subtitle}>
+              Signed in as <strong>{username}</strong>. Moderate item listings and resolve claim requests.
+            </p>
+          </div>
+          <Button onClick={handleLogout} size="sm" variant="ghost">
+            Sign out
+          </Button>
+        </div>
       </section>
 
       <div className={styles.tabBar} role="tablist" aria-label="Admin data tabs">

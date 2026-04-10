@@ -15,7 +15,7 @@ export default async function AdminPage() {
 
   return (
     <AppShell>
-      <AdminDashboardPage />
+      <AdminDashboardPage username={session.username} />
     </AppShell>
   );
 }
