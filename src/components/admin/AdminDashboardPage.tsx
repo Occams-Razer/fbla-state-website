@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
-import { Button, Card } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import { Button, Card, Modal } from "@/components/ui";
+import { fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -63,6 +62,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
+
+  const [viewItemId, setViewItemId] = useState<string | null>(null);
+  const [viewItem, setViewItem] = useState<Item | null>(null);
+  const [viewItemLoading, setViewItemLoading] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -130,6 +133,25 @@ export function AdminDashboardPage({ username }: { username: string }) {
     } finally {
       setActiveActionKey(null);
     }
+  }
+
+  async function handleViewItem(id: string) {
+    setViewItemId(id);
+    setViewItem(null);
+    setViewItemLoading(true);
+    try {
+      const item = await fetchItemById(id);
+      setViewItem(item);
+    } catch {
+      // item stays null — modal shows error state
+    } finally {
+      setViewItemLoading(false);
+    }
+  }
+
+  function handleCloseView() {
+    setViewItemId(null);
+    setViewItem(null);
   }
 
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
@@ -217,9 +239,9 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   return (
                     <Card key={item.id} className={styles.entryCard}>
                       <div className={styles.entryHeader}>
-                        <Link className={styles.entryTitleLink} href={`/items/${item.id}`} target="_blank" rel="noopener noreferrer">
-                          <h2 className={styles.entryTitle}>{item.title} ↗</h2>
-                        </Link>
+                        <button className={styles.entryTitleLink} onClick={() => handleViewItem(item.id)} type="button">
+                          <h2 className={styles.entryTitle}>{item.title}</h2>
+                        </button>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
                           {item.status}
                         </span>
@@ -325,9 +347,9 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <div>
                           <h2 className={styles.entryTitle}>{claim.name}</h2>
                           {claim.item?.id ? (
-                            <Link className={styles.claimItemLink} href={`/items/${claim.item.id}`} target="_blank" rel="noopener noreferrer">
-                              {claim.item.title ?? "View item"} ↗
-                            </Link>
+                            <button className={styles.claimItemLink} onClick={() => handleViewItem(claim.item!.id)} type="button">
+                              {claim.item.title ?? "View item"} →
+                            </button>
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
@@ -376,6 +398,40 @@ export function AdminDashboardPage({ username }: { username: string }) {
           ) : null}
         </section>
       </Fade>
+
+      {/* Item detail modal */}
+      <Modal
+        isOpen={viewItemId !== null}
+        onClose={handleCloseView}
+        title={viewItem?.title ?? (viewItemLoading ? "Loading…" : "Item details")}
+      >
+        {viewItemLoading ? (
+          <div className={styles.modalLoading}>
+            {[1, 2, 3].map((n) => (
+              <Skeleton key={n} variant="text" height={22} sx={{ borderRadius: 1 }} />
+            ))}
+          </div>
+        ) : viewItem ? (
+          <div className={styles.modalBody}>
+            {viewItem.imageUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img alt={`Photo of ${viewItem.title}`} className={styles.modalImage} src={viewItem.imageUrl} />
+            ) : null}
+            <dl className={styles.metaList}>
+              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{viewItem.status}</span></dd></div>
+              <div className={styles.metaRow}><dt>Category</dt><dd>{viewItem.category || "—"}</dd></div>
+              <div className={styles.metaRow}><dt>Location</dt><dd>{viewItem.location || "—"}</dd></div>
+              <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewItem.dateFound)}</dd></div>
+              <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(viewItem.createdAt)}</dd></div>
+            </dl>
+            {viewItem.description ? (
+              <p className={styles.modalDescription}>{viewItem.description}</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className={styles.mutedText}>Could not load item details.</p>
+        )}
+      </Modal>
 
       {/* Snackbar for success/error feedback */}
       <Snackbar
