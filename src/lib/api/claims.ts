@@ -36,3 +36,9 @@ export async function deleteClaim(claimId: string) {
     method: "DELETE",
   });
 }
+
+export async function clearClaimsByStatus(status: "APPROVED" | "REJECTED") {
+  return request<{ cleared: number }>(`/api/claims?status=${status}`, {
+    method: "DELETE",
+  });
+}

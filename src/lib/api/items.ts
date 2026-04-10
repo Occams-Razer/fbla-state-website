@@ -35,3 +35,9 @@ export async function archiveItem(itemId: string) {
     method: "DELETE",
   });
 }
+
+export async function clearItemsByStatus(status: "APPROVED" | "REJECTED") {
+  return request<{ cleared: number }>(`/api/admin/items?status=${status}`, {
+    method: "DELETE",
+  });
+}

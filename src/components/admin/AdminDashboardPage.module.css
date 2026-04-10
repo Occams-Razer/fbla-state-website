@@ -132,6 +132,14 @@
   color: #fff;
 }
 
+.subTabBarRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
 .subTabBar {
   display: inline-flex;
   gap: var(--space-2);

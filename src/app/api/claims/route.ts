@@ -83,6 +83,57 @@ export async function POST(request: Request) {
   }
 }
 
+export async function DELETE(request: Request) {
+  const auth = await requireAdminSession(request);
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    if (status !== "APPROVED" && status !== "REJECTED") {
+      return NextResponse.json({ error: "status must be APPROVED or REJECTED" }, { status: 400 });
+    }
+
+    const affected = await prisma.claim.findMany({
+      where: { status, isDeleted: false },
+      select: { itemId: true },
+    });
+
+    if (affected.length === 0) {
+      return NextResponse.json({ cleared: 0 });
+    }
+
+    const uniqueItemIds = [...new Set(affected.map((c: { itemId: string }) => c.itemId))];
+
+    const result = await prisma.claim.updateMany({
+      where: { status, isDeleted: false },
+      data: { isDeleted: true },
+    });
+
+    // Re-sync item claim state for each affected item
+    await Promise.all(
+      uniqueItemIds.map(async (itemId) => {
+        const approvedCount = await prisma.claim.count({
+          where: { itemId, status: "APPROVED", isDeleted: false },
+        });
+        if (approvedCount > 0) {
+          await prisma.item.update({ where: { id: itemId }, data: { status: "CLAIMED" } });
+        } else {
+          await prisma.item.updateMany({
+            where: { id: itemId, status: "CLAIMED" },
+            data: { status: "APPROVED" },
+          });
+        }
+      }),
+    );
+
+    return NextResponse.json({ cleared: result.count });
+  } catch (error) {
+    console.error("[claims DELETE bulk]", error);
+    return NextResponse.json({ error: "Failed to clear claims" }, { status: 500 });
+  }
+}
+
 export async function GET(request: Request) {
   const auth = await requireAdminSession(request);
   if (auth instanceof NextResponse) return auth;

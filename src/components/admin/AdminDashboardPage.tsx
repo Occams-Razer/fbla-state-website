@@ -7,7 +7,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { Button, Card, Modal } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import { clearClaimsByStatus, clearItemsByStatus, fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -62,6 +62,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
+  const [clearingKey, setClearingKey] = useState<string | null>(null);
 
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
@@ -137,6 +138,34 @@ export function AdminDashboardPage({ username }: { username: string }) {
     }
   }
 
+  async function handleClearItems(status: "APPROVED" | "REJECTED") {
+    const key = `clear-items:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearItemsByStatus(status);
+      setItems((prev) => prev.filter((i) => i.status !== status));
+      setSnackbar({ message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared !== 1 ? "s" : ""}.`, severity: "success" });
+    } catch (error) {
+      setSnackbar({ message: isApiError(error) ? error.message : "Could not clear items.", severity: "error" });
+    } finally {
+      setClearingKey(null);
+    }
+  }
+
+  async function handleClearClaims(status: "APPROVED" | "REJECTED") {
+    const key = `clear-claims:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearClaimsByStatus(status);
+      setClaims((prev) => prev.filter((c) => c.status !== status));
+      setSnackbar({ message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared !== 1 ? "s" : ""}.`, severity: "success" });
+    } catch (error) {
+      setSnackbar({ message: isApiError(error) ? error.message : "Could not clear claims.", severity: "error" });
+    } finally {
+      setClearingKey(null);
+    }
+  }
+
   async function handleViewItem(id: string) {
     setViewItemId(id);
     setViewItem(null);
@@ -197,26 +226,39 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
-            {([
-              { key: "PENDING",  label: "Submitted", cls: "" },
-              { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
-            ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={itemSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setItemSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabBarRow}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
+              {([
+                { key: "PENDING",  label: "Submitted", cls: "" },
+                { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
+              ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={itemSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setItemSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {items.filter((i) => i.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {(itemSubTab === "APPROVED" || itemSubTab === "REJECTED") && visibleItems.length > 0 ? (
+              <Button
+                disabled={clearingKey !== null}
+                loading={clearingKey === `clear-items:${itemSubTab}`}
+                onClick={() => handleClearItems(itemSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {items.filter((i) => i.status === key).length}
-                </span>
-              </button>
-            ))}
+                Clear list
+              </Button>
+            ) : null}
           </div>
 
           {/* Loading skeletons */}
@@ -307,26 +349,39 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
-            {([
-              { key: "PENDING",  label: "Pending",  cls: "" },
-              { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-            ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={claimSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setClaimSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabBarRow}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
+              {([
+                { key: "PENDING",  label: "Pending",  cls: "" },
+                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+              ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={claimSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setClaimSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {claims.filter((c) => c.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {(claimSubTab === "APPROVED" || claimSubTab === "REJECTED") && visibleClaims.length > 0 ? (
+              <Button
+                disabled={clearingKey !== null}
+                loading={clearingKey === `clear-claims:${claimSubTab}`}
+                onClick={() => handleClearClaims(claimSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {claims.filter((c) => c.status === key).length}
-                </span>
-              </button>
-            ))}
+                Clear list
+              </Button>
+            ) : null}
           </div>
 
           {isLoadingClaims ? (
