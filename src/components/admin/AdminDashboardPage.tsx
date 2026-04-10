@@ -65,7 +65,6 @@ export function AdminDashboardPage() {
         const results = await fetchAdminItems();
         if (!ignore) {
           setItems(results.items);
-          setLoginError(null);
         }
       } catch (error) {
         if (ignore) {
@@ -99,7 +98,6 @@ export function AdminDashboardPage() {
         const results = await fetchClaims();
         if (!ignore) {
           setClaims(results.claims);
-          setLoginError(null);
         }
       } catch (error) {
         if (ignore) {
