@@ -59,8 +59,14 @@ export function NavbarUserMenu() {
   }
 
   return (
-    <Link className={styles.signIn} href="/login">
-      Sign in
-    </Link>
+    <div className={styles.profileGroup}>
+      <span className={styles.userTile}>
+        <span className={styles.profileIcon} aria-hidden="true">○</span>
+        <span>User</span>
+      </span>
+      <Link className={styles.signIn} href="/login">
+        Sign in
+      </Link>
+    </div>
   );
 }

@@ -226,6 +226,21 @@
   gap: var(--space-3);
 }
 
+.clickableCard {
+  cursor: pointer;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.clickableCard:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.clickableCard:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .entryHeader {
   align-items: flex-start;
   display: flex;
@@ -258,21 +273,17 @@
   text-underline-offset: 0.15em;
 }
 
-.claimItemLink {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
+.claimItemLabel {
+  color: var(--color-text-muted);
   font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0;
-  transition: opacity 150ms ease;
+  margin: 0.15rem 0 0;
 }
 
-.claimItemLink:hover {
-  opacity: 0.75;
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
+.metaFieldLabel {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
 }
 
 .modalLoading {

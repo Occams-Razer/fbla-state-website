@@ -67,6 +67,8 @@ export function AdminDashboardPage({ username }: { username: string }) {
   const [viewItem, setViewItem] = useState<Item | null>(null);
   const [viewItemLoading, setViewItemLoading] = useState(false);
 
+  const [viewClaim, setViewClaim] = useState<Claim | null>(null);
+
   useEffect(() => {
     let ignore = false;
 
@@ -154,6 +156,14 @@ export function AdminDashboardPage({ username }: { username: string }) {
     setViewItem(null);
   }
 
+  function handleViewClaim(claim: Claim) {
+    setViewClaim(claim);
+  }
+
+  function handleCloseClaimView() {
+    setViewClaim(null);
+  }
+
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
   const visibleClaims = claims.filter((c) => c.status === claimSubTab);
 
@@ -237,11 +247,15 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `item:${item.id}:APPROVED`;
                   const rejectKey  = `item:${item.id}:REJECTED`;
                   return (
-                    <Card key={item.id} className={styles.entryCard}>
+                    <Card
+                      key={item.id}
+                      className={`${styles.entryCard} ${styles.clickableCard}`}
+                      onClick={() => handleViewItem(item.id)}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleViewItem(item.id); }}
+                    >
                       <div className={styles.entryHeader}>
-                        <button className={styles.entryTitleLink} onClick={() => handleViewItem(item.id)} type="button">
-                          <h2 className={styles.entryTitle}>{item.title}</h2>
-                        </button>
+                        <h2 className={styles.entryTitle}>{item.title}</h2>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
                           {item.status}
                         </span>
@@ -252,7 +266,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(item.createdAt)}</dd></div>
                       </dl>
                       <p className={styles.description}>{item.description || "No description provided."}</p>
-                      <div className={styles.actions}>
+                      <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                         <Tooltip title="Make this item visible to the public" arrow>
                           <span>
                             <Button
@@ -342,14 +356,18 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `claim:${claim.id}:APPROVED`;
                   const rejectKey  = `claim:${claim.id}:REJECTED`;
                   return (
-                    <Card key={claim.id} className={styles.entryCard}>
+                    <Card
+                      key={claim.id}
+                      className={`${styles.entryCard} ${styles.clickableCard}`}
+                      onClick={() => handleViewClaim(claim)}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleViewClaim(claim); }}
+                    >
                       <div className={styles.entryHeader}>
                         <div>
                           <h2 className={styles.entryTitle}>{claim.name}</h2>
-                          {claim.item?.id ? (
-                            <button className={styles.claimItemLink} onClick={() => handleViewItem(claim.item!.id)} type="button">
-                              {claim.item.title ?? "View item"} →
-                            </button>
+                          {claim.item?.title ? (
+                            <p className={styles.claimItemLabel}>{claim.item.title}</p>
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
@@ -361,8 +379,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <div className={styles.metaRow}><dt>Lost at</dt><dd>{claim.locationLost || "Unknown"}</dd></div>
                         <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(claim.createdAt)}</dd></div>
                       </dl>
-                      <p className={styles.description}>{claim.proofOfOwnership}</p>
-                      <div className={styles.actions}>
+                      <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                         <Tooltip title="Approve this claim and notify the claimant" arrow>
                           <span>
                             <Button
@@ -431,6 +448,48 @@ export function AdminDashboardPage({ username }: { username: string }) {
         ) : (
           <p className={styles.mutedText}>Could not load item details.</p>
         )}
+      </Modal>
+
+      {/* Claim detail modal */}
+      <Modal
+        isOpen={viewClaim !== null}
+        onClose={handleCloseClaimView}
+        title={viewClaim ? `Claim by ${viewClaim.name}` : "Claim details"}
+      >
+        {viewClaim ? (
+          <div className={styles.modalBody}>
+            {viewClaim.item?.imageUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                alt={`Photo of ${viewClaim.item.title}`}
+                className={styles.modalImage}
+                src={viewClaim.item.imageUrl}
+              />
+            ) : null}
+            <dl className={styles.metaList}>
+              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewClaim.status)}`}>{viewClaim.status}</span></dd></div>
+              <div className={styles.metaRow}><dt>Claimant</dt><dd>{viewClaim.name}</dd></div>
+              <div className={styles.metaRow}><dt>Email</dt><dd>{viewClaim.email}</dd></div>
+              <div className={styles.metaRow}><dt>Lost at</dt><dd>{viewClaim.locationLost || "—"}</dd></div>
+              <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(viewClaim.createdAt)}</dd></div>
+              {viewClaim.item ? (
+                <div className={styles.metaRow}><dt>Item</dt><dd>{viewClaim.item.title}</dd></div>
+              ) : null}
+              {viewClaim.item?.location ? (
+                <div className={styles.metaRow}><dt>Found at</dt><dd>{viewClaim.item.location}</dd></div>
+              ) : null}
+              {viewClaim.item?.dateFound ? (
+                <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewClaim.item.dateFound)}</dd></div>
+              ) : null}
+            </dl>
+            {viewClaim.proofOfOwnership ? (
+              <div>
+                <p className={styles.metaFieldLabel}>Proof of ownership</p>
+                <p className={styles.modalDescription}>{viewClaim.proofOfOwnership}</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </Modal>
 
       {/* Snackbar for success/error feedback */}
