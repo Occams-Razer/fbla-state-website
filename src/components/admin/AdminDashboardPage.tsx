@@ -324,7 +324,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
           </button>
           <button
             className={`${styles.quickStatTile} ${styles.quickStatItems} ${styles.quickStatButton}`}
-            onClick={() => router.push("/search")}
+            onClick={() => openItemsSubTab("APPROVED")}
             type="button"
           >
             <p className={styles.quickStatLabel}>Total Items on Search Page</p>
@@ -332,7 +332,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
           </button>
           <button
             className={`${styles.quickStatTile} ${styles.quickStatApproved} ${styles.quickStatButton}`}
-            onClick={() => openItemsSubTab("APPROVED")}
+            onClick={() => openClaimsSubTab("APPROVED")}
             type="button"
           >
             <p className={styles.quickStatLabel}>Items Approved to Claimed</p>

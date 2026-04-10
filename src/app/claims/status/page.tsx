@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button, Card, Input } from "@/components/ui";
 import { fetchClaimStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
@@ -36,7 +37,16 @@ function claimStatusLabel(status: string) {
 }
 
 export default function ClaimStatusPage() {
-  const [lookup, setLookup] = useState<LookupState>(INITIAL_LOOKUP);
+  const searchParams = useSearchParams();
+  const [lookup, setLookup] = useState<LookupState>(() => ({
+    ...INITIAL_LOOKUP,
+    claimId: searchParams.get("claimId") ?? "",
+  }));
+
+  useEffect(() => {
+    const id = searchParams.get("claimId");
+    if (id) setLookup((prev) => ({ ...prev, claimId: id }));
+  }, [searchParams]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -116,15 +126,16 @@ export default function ClaimStatusPage() {
 
       {result ? (
         <Card className={styles.resultCard} variant="outlined">
-          <h2 className={styles.resultTitle}>Claim Details</h2>
+          <div className={styles.resultHeader}>
+            <h2 className={styles.resultTitle}>Claim Details</h2>
+            <span className={`${styles.statusBadge} ${styles[`status_${result.status}`]}`}>
+              {claimStatusLabel(result.status)}
+            </span>
+          </div>
           <dl className={styles.metaList}>
             <div className={styles.metaRow}>
               <dt>Claim ID</dt>
               <dd>{result.claimId}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt>Status</dt>
-              <dd>{claimStatusLabel(result.status)}</dd>
             </div>
             <div className={styles.metaRow}>
               <dt>Submitted</dt>
@@ -134,11 +145,22 @@ export default function ClaimStatusPage() {
               <dt>Item</dt>
               <dd>{result.item?.title ?? "Item unavailable"}</dd>
             </div>
-            <div className={styles.metaRow}>
-              <dt>Item status</dt>
-              <dd>{result.item ? claimStatusLabel(result.item.itemStatus) : "Unknown"}</dd>
-            </div>
+            {result.item ? (
+              <div className={styles.metaRow}>
+                <dt>Item status</dt>
+                <dd>{claimStatusLabel(result.item.itemStatus)}</dd>
+              </div>
+            ) : null}
           </dl>
+          {result.status === "APPROVED" ? (
+            <p className={styles.approvedNote}>
+              Your claim has been approved. Please visit the school&apos;s lost and found office to collect your item.
+            </p>
+          ) : result.status === "PENDING" ? (
+            <p className={styles.pendingNote}>
+              Your claim is under review. You will be notified by email when a decision is made.
+            </p>
+          ) : null}
         </Card>
       ) : null}
     </div>

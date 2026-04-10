@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
@@ -101,6 +102,8 @@ export function ListingDetailPage() {
   const [claimSubmitError, setClaimSubmitError] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
   const [claimSnackbarOpen, setClaimSnackbarOpen] = useState(false);
+  const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
+  const [copiedClaimId, setCopiedClaimId] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -202,11 +205,11 @@ export function ListingDetailPage() {
 
     try {
       setIsSubmittingClaim(true);
-      await createClaim(payload);
+      const result = await createClaim(payload);
       setFormValues(INITIAL_FORM);
       setFormErrors({});
       setIsClaimModalOpen(false);
-      setClaimSnackbarOpen(true);
+      setSubmittedClaimId(result.id);
     } catch (error) {
       if (isApiError(error)) {
         setClaimSubmitError(error.message);
@@ -390,6 +393,48 @@ export function ListingDetailPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={submittedClaimId !== null}
+        onClose={() => { setSubmittedClaimId(null); setCopiedClaimId(false); }}
+        title="Claim submitted!"
+      >
+        <div className={styles.claimSuccessBody}>
+          <p className={styles.claimSuccessText}>
+            Your claim has been received. Save your Claim ID — you will need it along with your email to track your claim status.
+          </p>
+          <div className={styles.claimIdBox}>
+            <span className={styles.claimIdValue}>{submittedClaimId}</span>
+            <button
+              className={styles.claimIdCopy}
+              onClick={() => {
+                if (submittedClaimId) {
+                  void navigator.clipboard.writeText(submittedClaimId);
+                  setCopiedClaimId(true);
+                  setTimeout(() => setCopiedClaimId(false), 2000);
+                }
+              }}
+              type="button"
+            >
+              {copiedClaimId ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <div className={styles.claimSuccessActions}>
+            <Link
+              className={styles.claimTrackLink}
+              href={`/claims/status?claimId=${submittedClaimId ?? ""}`}
+            >
+              Track claim status →
+            </Link>
+            <Button
+              onClick={() => { setSubmittedClaimId(null); setCopiedClaimId(false); }}
+              variant="secondary"
+            >
+              Done
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <Snackbar

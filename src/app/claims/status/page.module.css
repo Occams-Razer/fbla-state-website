@@ -47,10 +47,63 @@
   max-width: 42rem;
 }
 
+.resultHeader {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
 .resultTitle {
   font-family: var(--font-display);
   font-size: 1.25rem;
-  margin: 0 0 var(--space-2) 0;
+  margin: 0;
+}
+
+.statusBadge {
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.7rem;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status_PENDING {
+  background: color-mix(in srgb, orange 14%, transparent);
+  color: color-mix(in srgb, orange 80%, black);
+}
+
+.status_APPROVED {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+}
+
+.status_REJECTED {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.approvedNote {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  border-radius: var(--radius-md);
+  color: color-mix(in srgb, var(--color-success) 80%, black);
+  font-size: 0.95rem;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.pendingNote {
+  background: color-mix(in srgb, orange 8%, transparent);
+  border: 1px solid color-mix(in srgb, orange 22%, transparent);
+  border-radius: var(--radius-md);
+  color: color-mix(in srgb, orange 70%, black);
+  font-size: 0.95rem;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
 }
 
 .metaList {

@@ -6,6 +6,7 @@ import { NavbarUserMenu } from "./NavbarUserMenu";
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
   { href: "/submit", label: "Submit" },
+  { href: "/claims/status", label: "Track Claim" },
 ];
 
 export function Navbar() {
