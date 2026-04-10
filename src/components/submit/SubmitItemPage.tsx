@@ -240,13 +240,24 @@ export function SubmitItemPage() {
               value={form.location}
             />
 
-            <Input
-              error={errors.dateFound}
-              label="Date found"
-              onChange={(event) => updateField("dateFound", event.target.value)}
-              type="date"
-              value={form.dateFound}
-            />
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="item-date-found">
+                Date found
+              </label>
+              <input
+                className={styles.dateInput}
+                id="item-date-found"
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(event) => updateField("dateFound", event.target.value)}
+                type="date"
+                value={form.dateFound}
+              />
+              {errors.dateFound ? (
+                <p className={styles.fieldError} role="alert">
+                  {errors.dateFound}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           <div className={styles.field}>

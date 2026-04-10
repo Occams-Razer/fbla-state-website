@@ -1,0 +1,90 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 40rem;
+}
+
+.formCard {
+  max-width: 34rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.errorText {
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.actions {
+  margin-top: var(--space-1);
+}
+
+.resultCard {
+  max-width: 42rem;
+}
+
+.resultTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.metaList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.metaRow {
+  column-gap: var(--space-3);
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+}
+
+.metaRow dt {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.metaRow dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-top: var(--space-6);
+  }
+
+  .actions :global(button) {
+    width: 100%;
+  }
+
+  .metaRow {
+    grid-template-columns: 1fr;
+  }
+}

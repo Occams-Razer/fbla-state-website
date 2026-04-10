@@ -1,5 +1,5 @@
 export type ItemStatus = "PENDING" | "APPROVED" | "REJECTED" | "CLAIMED";
-export type ClaimStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type ClaimStatus = "PENDING" | "APPROVED" | "REJECTED" | "PICKED_UP";
 
 export interface Item {
   id: string;

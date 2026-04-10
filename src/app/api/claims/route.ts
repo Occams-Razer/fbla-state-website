@@ -90,8 +90,11 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
-    if (status !== "APPROVED" && status !== "REJECTED") {
-      return NextResponse.json({ error: "status must be APPROVED or REJECTED" }, { status: 400 });
+    if (status !== "APPROVED" && status !== "REJECTED" && status !== "PICKED_UP") {
+      return NextResponse.json(
+        { error: "status must be APPROVED, REJECTED, or PICKED_UP" },
+        { status: 400 },
+      );
     }
 
     const affected = await prisma.claim.findMany({
@@ -114,7 +117,7 @@ export async function DELETE(request: Request) {
     await Promise.all(
       uniqueItemIds.map(async (itemId) => {
         const approvedCount = await prisma.claim.count({
-          where: { itemId, status: "APPROVED", isDeleted: false },
+          where: { itemId, status: { in: ["APPROVED", "PICKED_UP"] }, isDeleted: false },
         });
         if (approvedCount > 0) {
           await prisma.item.update({ where: { id: itemId }, data: { status: "CLAIMED" } });

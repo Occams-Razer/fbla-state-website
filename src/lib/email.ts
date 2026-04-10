@@ -124,6 +124,45 @@ export async function sendClaimApprovedEmail(claim: {
   }
 }
 
+/** Email the claimant when pickup has been completed. */
+export async function sendClaimPickedUpEmail(claim: {
+  name: string;
+  email: string;
+  id: string;
+}, item: {
+  title: string;
+  category: string;
+  location: string;
+}): Promise<void> {
+  const contactEmail = process.env.ADMIN_EMAIL ?? "";
+
+  const body = `
+    <p style="margin:0 0 16px;color:#333;line-height:1.6;">
+      Hi <strong>${claim.name}</strong>,<br><br>
+      Your pickup has been marked as <strong style="color:#2563eb;">completed</strong> for the item below.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+      ${row("Item", item.title)}
+      ${row("Category", item.category || "—")}
+      ${row("Found at", item.location || "—")}
+      ${row("Claim ID", claim.id)}
+    </table>
+    <p style="margin:0;color:#333;line-height:1.6;">
+      Thanks for using Foundry.
+      ${contactEmail ? `If you need anything else, contact us at <a href="mailto:${contactEmail}" style="color:#4f46e5;">${contactEmail}</a>.` : ""}
+    </p>`;
+
+  try {
+    await sendEmail(
+      claim.email,
+      `Pickup completed for "${item.title}"`,
+      baseTemplate("Pickup Confirmed", body),
+    );
+  } catch (err) {
+    console.error("[email] sendClaimPickedUpEmail failed:", err);
+  }
+}
+
 /** Email the admin when a new item is submitted for review. */
 export async function sendNewItemAdminEmail(item: {
   id: string;

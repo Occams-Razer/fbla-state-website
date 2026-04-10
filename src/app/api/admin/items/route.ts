@@ -16,10 +16,28 @@ export async function DELETE(request: Request) {
     if (status !== "APPROVED" && status !== "REJECTED") {
       return NextResponse.json({ error: "status must be APPROVED or REJECTED" }, { status: 400 });
     }
-    const result = await prisma.item.updateMany({
+    const matchingItems = await prisma.item.findMany({
       where: { status, isDeleted: false },
+      select: { id: true },
+    });
+
+    const itemIds = matchingItems.map((item) => item.id);
+
+    const result = await prisma.item.updateMany({
+      where: { id: { in: itemIds } },
       data: { isDeleted: true },
     });
+
+    if (itemIds.length > 0) {
+      await prisma.claim.updateMany({
+        where: {
+          itemId: { in: itemIds },
+          isDeleted: false,
+        },
+        data: { isDeleted: true },
+      });
+    }
+
     return NextResponse.json({ cleared: result.count });
   } catch {
     return NextResponse.json({ error: "Failed to clear items" }, { status: 500 });

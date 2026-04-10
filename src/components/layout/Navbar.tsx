@@ -19,6 +19,7 @@ export function Navbar() {
             height={37}
             priority
             src="/logo.svg"
+            style={{ height: "auto" }}
             width={40}
           />
           <span className={styles.brandText}>FOUNDRY</span>
