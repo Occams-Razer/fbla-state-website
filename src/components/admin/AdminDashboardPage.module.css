@@ -116,6 +116,58 @@
   color: #fff;
 }
 
+.subTabBar {
+  display: inline-flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.subTabButton {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: var(--space-2);
+  min-height: 2.1rem;
+  padding: 0.3rem 0.85rem;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.subTabButton[aria-selected="true"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.subTabApproved[aria-selected="true"] {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.subTabRejected[aria-selected="true"] {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.subTabCount {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  min-width: 1.25rem;
+  padding: 0.05rem 0.35rem;
+  text-align: center;
+}
+
+.subTabButton:not([aria-selected="true"]) .subTabCount {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
 .section {
   display: flex;
   flex-direction: column;
@@ -172,13 +224,31 @@
 }
 
 .statusTag {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   border-radius: var(--radius-pill);
-  color: var(--color-primary);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   padding: 0.2rem 0.55rem;
+}
+
+.tagPending {
+  background: color-mix(in srgb, orange 14%, transparent);
+  color: color-mix(in srgb, orange 80%, black);
+}
+
+.tagApproved {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+}
+
+.tagRejected {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.tagClaimed {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
 }
 
 .metaList {

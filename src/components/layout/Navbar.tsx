@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Navbar.module.css";
+import { NavbarUserMenu } from "./NavbarUserMenu";
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -29,9 +30,7 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link className={styles.signIn} href="/login">
-            Sign in
-          </Link>
+          <NavbarUserMenu />
         </nav>
       </div>
     </header>

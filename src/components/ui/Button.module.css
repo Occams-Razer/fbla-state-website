@@ -79,6 +79,15 @@
   background: color-mix(in srgb, var(--color-danger) 88%, black);
 }
 
+.variant_success {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.variant_success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-success) 88%, black);
+}
+
 .icon {
   align-items: center;
   display: inline-flex;
