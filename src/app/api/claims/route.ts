@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { claimCreateSchema, claimsListQuerySchema, formatZodError } from "@/lib/schemas";
-import { normalizeEmail } from "@/lib/email";
+import { normalizeEmail, sendNewClaimAdminEmail } from "@/lib/email";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const CLAIM_POST_WINDOW_MS = 60 * 1000;
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       where: { id: itemId },
       select: {
         id: true,
+        title: true,
         status: true,
         isDeleted: true,
       },
@@ -54,6 +55,17 @@ export async function POST(request: Request) {
         locationLost,
       },
     });
+
+    void sendNewClaimAdminEmail(
+      {
+        id: newClaim.id,
+        name: newClaim.name,
+        email: newClaim.email,
+        proofOfOwnership: newClaim.proofOfOwnership,
+        locationLost: newClaim.locationLost,
+      },
+      item.title,
+    );
 
     return NextResponse.json(
       {

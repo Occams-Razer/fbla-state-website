@@ -1,17 +1,24 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ReactNode } from "react";
+import ButtonBase from "@mui/material/ButtonBase";
 import { cn } from "@/lib/utils/cn";
 import styles from "./Button.module.css";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "success";
 type ButtonSize = "sm" | "md" | "lg";
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
   fullWidth?: boolean;
   iconLeft?: ReactNode;
   iconRight?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  "aria-label"?: string;
 }
 
 export function Button({
@@ -28,7 +35,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <ButtonBase
       {...props}
       className={cn(
         styles.button,
@@ -37,6 +44,7 @@ export function Button({
         fullWidth && styles.fullWidth,
         className,
       )}
+      component="button"
       disabled={disabled || loading}
       type={type}
     >
@@ -52,6 +60,6 @@ export function Button({
           {iconRight ? <span className={styles.icon}>{iconRight}</span> : null}
         </>
       )}
-    </button>
+    </ButtonBase>
   );
 }
