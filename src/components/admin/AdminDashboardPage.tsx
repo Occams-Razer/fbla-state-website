@@ -7,7 +7,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { Button, Card, Modal } from "@/components/ui";
-import { clearClaimsByStatus, clearItemsByStatus, fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import { fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -62,13 +62,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
-  const [clearingKey, setClearingKey] = useState<string | null>(null);
 
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
   const [viewItemLoading, setViewItemLoading] = useState(false);
-
-  const [viewClaim, setViewClaim] = useState<Claim | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -138,34 +135,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
     }
   }
 
-  async function handleClearItems(status: "APPROVED" | "REJECTED") {
-    const key = `clear-items:${status}`;
-    setClearingKey(key);
-    try {
-      const { cleared } = await clearItemsByStatus(status);
-      setItems((prev) => prev.filter((i) => i.status !== status));
-      setSnackbar({ message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared !== 1 ? "s" : ""}.`, severity: "success" });
-    } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not clear items.", severity: "error" });
-    } finally {
-      setClearingKey(null);
-    }
-  }
-
-  async function handleClearClaims(status: "APPROVED" | "REJECTED") {
-    const key = `clear-claims:${status}`;
-    setClearingKey(key);
-    try {
-      const { cleared } = await clearClaimsByStatus(status);
-      setClaims((prev) => prev.filter((c) => c.status !== status));
-      setSnackbar({ message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared !== 1 ? "s" : ""}.`, severity: "success" });
-    } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not clear claims.", severity: "error" });
-    } finally {
-      setClearingKey(null);
-    }
-  }
-
   async function handleViewItem(id: string) {
     setViewItemId(id);
     setViewItem(null);
@@ -183,14 +152,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
   function handleCloseView() {
     setViewItemId(null);
     setViewItem(null);
-  }
-
-  function handleViewClaim(claim: Claim) {
-    setViewClaim(claim);
-  }
-
-  function handleCloseClaimView() {
-    setViewClaim(null);
   }
 
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
@@ -226,39 +187,26 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBarRow}>
-            <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
-              {([
-                { key: "PENDING",  label: "Submitted", cls: "" },
-                { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
-                { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
-              ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-                <button
-                  key={key}
-                  aria-selected={itemSubTab === key}
-                  className={`${styles.subTabButton} ${cls}`}
-                  onClick={() => setItemSubTab(key)}
-                  role="tab"
-                  type="button"
-                >
-                  {label}
-                  <span className={styles.subTabCount}>
-                    {items.filter((i) => i.status === key).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {(itemSubTab === "APPROVED" || itemSubTab === "REJECTED") && visibleItems.length > 0 ? (
-              <Button
-                disabled={clearingKey !== null}
-                loading={clearingKey === `clear-items:${itemSubTab}`}
-                onClick={() => handleClearItems(itemSubTab)}
-                size="sm"
-                variant="danger"
+          <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
+            {([
+              { key: "PENDING",  label: "Submitted", cls: "" },
+              { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
+              { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
+            ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+              <button
+                key={key}
+                aria-selected={itemSubTab === key}
+                className={`${styles.subTabButton} ${cls}`}
+                onClick={() => setItemSubTab(key)}
+                role="tab"
+                type="button"
               >
-                Clear list
-              </Button>
-            ) : null}
+                {label}
+                <span className={styles.subTabCount}>
+                  {items.filter((i) => i.status === key).length}
+                </span>
+              </button>
+            ))}
           </div>
 
           {/* Loading skeletons */}
@@ -289,15 +237,11 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `item:${item.id}:APPROVED`;
                   const rejectKey  = `item:${item.id}:REJECTED`;
                   return (
-                    <Card
-                      key={item.id}
-                      className={`${styles.entryCard} ${styles.clickableCard}`}
-                      onClick={() => handleViewItem(item.id)}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleViewItem(item.id); }}
-                    >
+                    <Card key={item.id} className={styles.entryCard}>
                       <div className={styles.entryHeader}>
-                        <h2 className={styles.entryTitle}>{item.title}</h2>
+                        <button className={styles.entryTitleLink} onClick={() => handleViewItem(item.id)} type="button">
+                          <h2 className={styles.entryTitle}>{item.title}</h2>
+                        </button>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
                           {item.status}
                         </span>
@@ -308,7 +252,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(item.createdAt)}</dd></div>
                       </dl>
                       <p className={styles.description}>{item.description || "No description provided."}</p>
-                      <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+                      <div className={styles.actions}>
                         <Tooltip title="Make this item visible to the public" arrow>
                           <span>
                             <Button
@@ -349,39 +293,26 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBarRow}>
-            <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
-              {([
-                { key: "PENDING",  label: "Pending",  cls: "" },
-                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-              ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-                <button
-                  key={key}
-                  aria-selected={claimSubTab === key}
-                  className={`${styles.subTabButton} ${cls}`}
-                  onClick={() => setClaimSubTab(key)}
-                  role="tab"
-                  type="button"
-                >
-                  {label}
-                  <span className={styles.subTabCount}>
-                    {claims.filter((c) => c.status === key).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {(claimSubTab === "APPROVED" || claimSubTab === "REJECTED") && visibleClaims.length > 0 ? (
-              <Button
-                disabled={clearingKey !== null}
-                loading={clearingKey === `clear-claims:${claimSubTab}`}
-                onClick={() => handleClearClaims(claimSubTab)}
-                size="sm"
-                variant="danger"
+          <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
+            {([
+              { key: "PENDING",  label: "Pending",  cls: "" },
+              { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+              { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+            ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+              <button
+                key={key}
+                aria-selected={claimSubTab === key}
+                className={`${styles.subTabButton} ${cls}`}
+                onClick={() => setClaimSubTab(key)}
+                role="tab"
+                type="button"
               >
-                Clear list
-              </Button>
-            ) : null}
+                {label}
+                <span className={styles.subTabCount}>
+                  {claims.filter((c) => c.status === key).length}
+                </span>
+              </button>
+            ))}
           </div>
 
           {isLoadingClaims ? (
@@ -411,18 +342,14 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `claim:${claim.id}:APPROVED`;
                   const rejectKey  = `claim:${claim.id}:REJECTED`;
                   return (
-                    <Card
-                      key={claim.id}
-                      className={`${styles.entryCard} ${styles.clickableCard}`}
-                      onClick={() => handleViewClaim(claim)}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleViewClaim(claim); }}
-                    >
+                    <Card key={claim.id} className={styles.entryCard}>
                       <div className={styles.entryHeader}>
                         <div>
                           <h2 className={styles.entryTitle}>{claim.name}</h2>
-                          {claim.item?.title ? (
-                            <p className={styles.claimItemLabel}>{claim.item.title}</p>
+                          {claim.item?.id ? (
+                            <button className={styles.claimItemLink} onClick={() => handleViewItem(claim.item!.id)} type="button">
+                              {claim.item.title ?? "View item"} →
+                            </button>
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
@@ -434,7 +361,8 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <div className={styles.metaRow}><dt>Lost at</dt><dd>{claim.locationLost || "Unknown"}</dd></div>
                         <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(claim.createdAt)}</dd></div>
                       </dl>
-                      <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+                      <p className={styles.description}>{claim.proofOfOwnership}</p>
+                      <div className={styles.actions}>
                         <Tooltip title="Approve this claim and notify the claimant" arrow>
                           <span>
                             <Button
@@ -503,48 +431,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         ) : (
           <p className={styles.mutedText}>Could not load item details.</p>
         )}
-      </Modal>
-
-      {/* Claim detail modal */}
-      <Modal
-        isOpen={viewClaim !== null}
-        onClose={handleCloseClaimView}
-        title={viewClaim ? `Claim by ${viewClaim.name}` : "Claim details"}
-      >
-        {viewClaim ? (
-          <div className={styles.modalBody}>
-            {viewClaim.item?.imageUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                alt={`Photo of ${viewClaim.item.title}`}
-                className={styles.modalImage}
-                src={viewClaim.item.imageUrl}
-              />
-            ) : null}
-            <dl className={styles.metaList}>
-              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewClaim.status)}`}>{viewClaim.status}</span></dd></div>
-              <div className={styles.metaRow}><dt>Claimant</dt><dd>{viewClaim.name}</dd></div>
-              <div className={styles.metaRow}><dt>Email</dt><dd>{viewClaim.email}</dd></div>
-              <div className={styles.metaRow}><dt>Lost at</dt><dd>{viewClaim.locationLost || "—"}</dd></div>
-              <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(viewClaim.createdAt)}</dd></div>
-              {viewClaim.item ? (
-                <div className={styles.metaRow}><dt>Item</dt><dd>{viewClaim.item.title}</dd></div>
-              ) : null}
-              {viewClaim.item?.location ? (
-                <div className={styles.metaRow}><dt>Found at</dt><dd>{viewClaim.item.location}</dd></div>
-              ) : null}
-              {viewClaim.item?.dateFound ? (
-                <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewClaim.item.dateFound)}</dd></div>
-              ) : null}
-            </dl>
-            {viewClaim.proofOfOwnership ? (
-              <div>
-                <p className={styles.metaFieldLabel}>Proof of ownership</p>
-                <p className={styles.modalDescription}>{viewClaim.proofOfOwnership}</p>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </Modal>
 
       {/* Snackbar for success/error feedback */}

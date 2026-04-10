@@ -58,19 +58,23 @@
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
 
-.signIn {
-  background: var(--color-primary);
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-size: 1rem;
+.userBadge {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-text-muted) 8%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  font-size: 0.9rem;
   font-weight: 700;
+  gap: 0.4rem;
   margin-left: var(--space-2);
-  padding: 0.6rem 1rem;
-  transition: background-color 180ms ease;
+  padding: 0.45rem 0.85rem;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
-.signIn:hover {
-  background: var(--color-primary-hover);
+.userBadge:hover {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
 }
 
 .userTile {

@@ -132,14 +132,6 @@
   color: #fff;
 }
 
-.subTabBarRow {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  justify-content: space-between;
-}
-
 .subTabBar {
   display: inline-flex;
   gap: var(--space-2);
@@ -234,21 +226,6 @@
   gap: var(--space-3);
 }
 
-.clickableCard {
-  cursor: pointer;
-  transition: box-shadow 180ms ease, transform 180ms ease;
-}
-
-.clickableCard:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.clickableCard:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
 .entryHeader {
   align-items: flex-start;
   display: flex;
@@ -281,17 +258,21 @@
   text-underline-offset: 0.15em;
 }
 
-.claimItemLabel {
-  color: var(--color-text-muted);
+.claimItemLink {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
   font-size: 0.85rem;
-  margin: 0.15rem 0 0;
+  font-weight: 600;
+  padding: 0;
+  transition: opacity 150ms ease;
 }
 
-.metaFieldLabel {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin: 0 0 var(--space-1);
+.claimItemLink:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
 
 .modalLoading {

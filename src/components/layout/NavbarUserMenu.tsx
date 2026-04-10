@@ -7,7 +7,6 @@ import styles from "./Navbar.module.css";
 interface SessionState {
   authenticated: boolean;
   username?: string;
-  role?: "admin" | "user";
 }
 
 export function NavbarUserMenu() {
@@ -30,7 +29,7 @@ export function NavbarUserMenu() {
     return <div className={styles.authPlaceholder} />;
   }
 
-  if (session.authenticated && session.username && session.role !== "user") {
+  if (session.authenticated && session.username) {
     return (
       <div className={styles.profileGroup}>
         <Link className={styles.profileBadge} href="/admin">
@@ -44,29 +43,10 @@ export function NavbarUserMenu() {
     );
   }
 
-  if (session.authenticated && session.role === "user") {
-    return (
-      <div className={styles.profileGroup}>
-        <span className={styles.userTile}>
-          <span className={styles.profileIcon} aria-hidden="true">○</span>
-          <span>User</span>
-        </span>
-        <button className={styles.signOut} onClick={handleLogout} type="button">
-          Sign out
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className={styles.profileGroup}>
-      <span className={styles.userTile}>
-        <span className={styles.profileIcon} aria-hidden="true">○</span>
-        <span>User</span>
-      </span>
-      <Link className={styles.signIn} href="/login">
-        Sign in
-      </Link>
-    </div>
+    <Link className={styles.userBadge} href="/login">
+      <span className={styles.profileIcon} aria-hidden="true">○</span>
+      <span>Sign in</span>
+    </Link>
   );
 }
