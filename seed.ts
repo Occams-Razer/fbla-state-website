@@ -5,7 +5,7 @@
  */
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./src/generated/client";
 import bcrypt from "bcryptjs";
 
 if (!process.env.DATABASE_URL) {

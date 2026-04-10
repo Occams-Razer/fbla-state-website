@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/client";
 import { prisma } from "@/lib/prisma";
 import { itemCreateSchema, itemListQuerySchema, formatZodError } from "@/lib/schemas";
 import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
