@@ -86,12 +86,69 @@
   outline: none;
 }
 
-.fileInput {
-  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  min-height: 2.8rem;
-  padding: 0.55rem 0.7rem;
+.fileInputHidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.fileInputLabel {
+  align-items: center;
+  background: var(--color-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 700;
+  gap: var(--space-2);
+  justify-content: center;
+  line-height: 1;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.1rem;
+  transition:
+    background-color 180ms ease,
+    transform 100ms ease;
+}
+
+.fileInputLabel:hover {
+  background: var(--color-primary-hover);
+}
+
+.fileInputLabel:active {
+  transform: scale(0.97);
+}
+
+.fileInputLabelBusy {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.fileInputLabelUploaded {
+  background: var(--color-success);
+}
+
+.fileInputLabelUploaded:hover {
+  background: color-mix(in srgb, var(--color-success) 88%, black);
+}
+
+.fileInputSpinner {
+  animation: spin 0.9s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  border-right-color: #fff;
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .previewWrap {

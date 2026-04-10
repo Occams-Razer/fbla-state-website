@@ -7,7 +7,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { Button, Card } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, logoutAdmin, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import { fetchAdminItems, fetchClaims, updateClaimStatus, updateItemStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -131,11 +131,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
     }
   }
 
-  async function handleLogout() {
-    try { await logoutAdmin(); } catch { /* ignore */ }
-    window.location.href = "/login";
-  }
-
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
   const visibleClaims = claims.filter((c) => c.status === claimSubTab);
 
@@ -143,15 +138,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
     <div className={styles.page}>
       {/* Header */}
       <section aria-labelledby="admin-dashboard-title" className={styles.header}>
-        <div className={styles.headerRow}>
-          <div>
-            <h1 className={styles.title} id="admin-dashboard-title">Admin Dashboard</h1>
-            <p className={styles.subtitle}>
-              Signed in as <strong>{username}</strong>. Moderate item listings and resolve claim requests.
-            </p>
-          </div>
-          <Button onClick={handleLogout} size="sm" variant="ghost">Sign out</Button>
-        </div>
+        <h1 className={styles.title} id="admin-dashboard-title">Admin Dashboard</h1>
+        <p className={styles.subtitle}>
+          Signed in as <strong>{username}</strong>. Moderate item listings and resolve claim requests.
+        </p>
       </section>
 
       {/* Main tabs */}

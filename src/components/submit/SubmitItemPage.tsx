@@ -83,16 +83,10 @@ export function SubmitItemPage() {
 
   const isBusy = uploadStatus === "uploading" || isSubmitting;
 
-  const uploadLabel = useMemo(() => {
-    if (uploadStatus === "uploading") {
-      return "Uploading image...";
-    }
-
-    if (uploadStatus === "uploaded") {
-      return uploadedImageName ? `Uploaded: ${uploadedImageName}` : "Image uploaded.";
-    }
-
-    return "Choose an image (required)";
+  const uploadButtonLabel = useMemo(() => {
+    if (uploadStatus === "uploading") return null; // spinner shown instead
+    if (uploadStatus === "uploaded") return uploadedImageName ? `\u2713 ${uploadedImageName}` : "\u2713 Image uploaded";
+    return "Choose image";
   }, [uploadStatus, uploadedImageName]);
 
   function updateField<K extends keyof SubmitFormState>(field: K, value: SubmitFormState[K]) {
@@ -271,12 +265,27 @@ export function SubmitItemPage() {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="item-image">
-              {uploadLabel}
+            <span className={styles.label}>
+              Item photo <span className={styles.required}>*</span>
+            </span>
+            <label
+              className={[
+                styles.fileInputLabel,
+                isBusy ? styles.fileInputLabelBusy : "",
+                uploadStatus === "uploaded" ? styles.fileInputLabelUploaded : "",
+              ].filter(Boolean).join(" ")}
+              htmlFor="item-image"
+            >
+              {uploadStatus === "uploading" ? (
+                <>
+                  <span aria-hidden="true" className={styles.fileInputSpinner} />
+                  <span>Uploading...</span>
+                </>
+              ) : uploadButtonLabel}
             </label>
             <input
               accept="image/*"
-              className={styles.fileInput}
+              className={styles.fileInputHidden}
               disabled={isBusy}
               id="item-image"
               onChange={handleImageUpload}

@@ -34,49 +34,45 @@ export function ListingCard({ item }: ListingCardProps) {
   const badgeVariant = STATUS_VARIANT[item.status] ?? "neutral";
 
   return (
-    <Card className={styles.card}>
-      <div className={styles.imageWrap}>
-        {item.imageUrl ? (
-          <img
-            alt={`Photo of ${item.title}`}
-            className={styles.image}
-            loading="lazy"
-            src={item.imageUrl}
-          />
-        ) : (
-          <div className={styles.imageFallback}>No photo available</div>
-        )}
-      </div>
-
-      <div className={styles.content}>
-        <div className={styles.titleRow}>
-          <h3 className={styles.title}>{item.title}</h3>
-          <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
+    <Link aria-label={`View details for ${item.title}`} className={styles.cardLink} href={`/items/${item.id}`}>
+      <Card className={styles.card}>
+        <div className={styles.imageWrap}>
+          {item.imageUrl ? (
+            <img
+              alt={`Photo of ${item.title}`}
+              className={styles.image}
+              loading="lazy"
+              src={item.imageUrl}
+            />
+          ) : (
+            <div className={styles.imageFallback}>No photo available</div>
+          )}
         </div>
 
-        <p className={styles.description}>{item.description || "No description provided."}</p>
+        <div className={styles.content}>
+          <div className={styles.titleRow}>
+            <h3 className={styles.title}>{item.title}</h3>
+            <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
+          </div>
 
-        <dl className={styles.metaList}>
-          <div className={styles.metaRow}>
-            <dt className={styles.metaLabel}>Category</dt>
-            <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
-          </div>
-          <div className={styles.metaRow}>
-            <dt className={styles.metaLabel}>Location</dt>
-            <dd className={styles.metaValue}>{item.location || "Unknown"}</dd>
-          </div>
-          <div className={styles.metaRow}>
-            <dt className={styles.metaLabel}>Date found</dt>
-            <dd className={styles.metaValue}>{formatDate(displayDate)}</dd>
-          </div>
-        </dl>
+          <p className={styles.description}>{item.description || "No description provided."}</p>
 
-        <div className={styles.actions}>
-          <Link aria-label={`View details for ${item.title}`} className={styles.detailLink} href={`/items/${item.id}`}>
-            View details
-          </Link>
+          <dl className={styles.metaList}>
+            <div className={styles.metaRow}>
+              <dt className={styles.metaLabel}>Category</dt>
+              <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
+            </div>
+            <div className={styles.metaRow}>
+              <dt className={styles.metaLabel}>Location</dt>
+              <dd className={styles.metaValue}>{item.location || "Unknown"}</dd>
+            </div>
+            <div className={styles.metaRow}>
+              <dt className={styles.metaLabel}>Date found</dt>
+              <dd className={styles.metaValue}>{formatDate(displayDate)}</dd>
+            </div>
+          </dl>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }

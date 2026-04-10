@@ -1,7 +1,20 @@
+.cardLink {
+  color: inherit;
+  display: block;
+  height: 100%;
+  text-decoration: none;
+}
+
+.cardLink:hover .card {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
 .card {
   height: 100%;
   overflow: hidden;
   padding: 0;
+  transition: transform 200ms ease, box-shadow 200ms ease;
 }
 
 .imageWrap {
