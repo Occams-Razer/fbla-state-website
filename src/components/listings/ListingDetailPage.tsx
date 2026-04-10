@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import { Badge, Button, Card, Input, Modal } from "@/components/ui";
 import type { BadgeVariant } from "@/components/ui/Badge";
 import { createClaim, fetchItemById } from "@/lib/api";
@@ -97,8 +99,8 @@ export function ListingDetailPage() {
   const [formValues, setFormValues] = useState<ClaimFormState>(INITIAL_FORM);
   const [formErrors, setFormErrors] = useState<ClaimFormErrors>({});
   const [claimSubmitError, setClaimSubmitError] = useState<string | null>(null);
-  const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+  const [claimSnackbarOpen, setClaimSnackbarOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -150,7 +152,6 @@ export function ListingDetailPage() {
   function handleOpenClaimModal() {
     setFormErrors({});
     setClaimSubmitError(null);
-    setClaimSuccessMessage(null);
     setIsClaimModalOpen(true);
   }
 
@@ -186,7 +187,6 @@ export function ListingDetailPage() {
     const nextErrors = validateClaimForm(formValues);
     setFormErrors(nextErrors);
     setClaimSubmitError(null);
-    setClaimSuccessMessage(null);
 
     if (Object.keys(nextErrors).length > 0) {
       return;
@@ -203,9 +203,10 @@ export function ListingDetailPage() {
     try {
       setIsSubmittingClaim(true);
       await createClaim(payload);
-      setClaimSuccessMessage("Claim submitted successfully. An admin will review it soon.");
       setFormValues(INITIAL_FORM);
       setFormErrors({});
+      setIsClaimModalOpen(false);
+      setClaimSnackbarOpen(true);
     } catch (error) {
       if (isApiError(error)) {
         setClaimSubmitError(error.message);
@@ -375,12 +376,6 @@ export function ListingDetailPage() {
             </p>
           ) : null}
 
-          {claimSuccessMessage ? (
-            <p className={styles.submitSuccess} role="status">
-              {claimSuccessMessage}
-            </p>
-          ) : null}
-
           <div className={styles.claimActions}>
             <Button
               disabled={isSubmittingClaim}
@@ -396,6 +391,20 @@ export function ListingDetailPage() {
           </div>
         </form>
       </Modal>
+
+      <Snackbar
+        autoHideDuration={4000}
+        onClose={() => setClaimSnackbarOpen(false)}
+        open={claimSnackbarOpen}
+      >
+        <Alert
+          onClose={() => setClaimSnackbarOpen(false)}
+          severity="success"
+          sx={{ borderRadius: 2, width: "100%" }}
+        >
+          Claim submitted successfully. An admin will review it soon.
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import { Button, Card, Input } from "@/components/ui";
 import { createItem, uploadItemImage } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
@@ -80,6 +82,7 @@ export function SubmitItemPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const isBusy = uploadStatus === "uploading" || isSubmitting;
 
@@ -166,6 +169,7 @@ export function SubmitItemPage() {
       setIsSubmitting(true);
       await createItem(payload);
       setSubmitSuccess("Item submitted. It is now pending admin review.");
+      setSnackbarOpen(true);
       setForm(INITIAL_FORM);
       setErrors({});
       setUploadedImageUrl(null);
@@ -333,6 +337,20 @@ export function SubmitItemPage() {
           </div>
         </form>
       </Card>
+
+      <Snackbar
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        open={snackbarOpen}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          sx={{ borderRadius: 2, width: "100%" }}
+        >
+          Item submitted. It is now pending admin review.
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
