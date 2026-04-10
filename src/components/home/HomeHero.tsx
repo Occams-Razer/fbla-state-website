@@ -14,6 +14,8 @@ export function HomeHero() {
         <span className={styles.titleAccent}> Let&apos;s find it.</span>
       </h1>
 
+      <p className={styles.tagline}>Foundry is the future.</p>
+
       <p className={styles.subtitle}>
         The easiest way to recover lost items at school. Search, report, and
         claim all in one place.

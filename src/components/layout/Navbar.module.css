@@ -107,6 +107,18 @@
   line-height: 1;
 }
 
+.roleTag {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 0.15rem 0.5rem;
+  text-transform: uppercase;
+}
+
 .signOut {
   background: transparent;
   border: 1px solid var(--color-border-strong);

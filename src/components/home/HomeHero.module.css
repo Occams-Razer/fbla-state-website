@@ -35,6 +35,15 @@
   display: block;
 }
 
+.tagline {
+  color: var(--color-primary);
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .subtitle {
   color: var(--color-text-muted);
   font-size: clamp(1rem, 2.3vw, 1.6rem);

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { Button, Card, Input } from "@/components/ui";
 import { loginAdmin } from "@/lib/api";
@@ -62,6 +63,10 @@ export function AdminLoginPage() {
   return (
     <div className={styles.loginPage}>
       <div className={styles.loginBox}>
+        <div className={styles.loginLogoWrap}>
+          <Image alt="Foundry logo" height={48} priority src="/logo.svg" width={52} />
+          <span className={styles.loginLogoText}>FOUNDRY</span>
+        </div>
         <h1 className={styles.loginTitle}>Admin Sign In</h1>
         <p className={styles.loginSubtitle}>
           Sign in to review found item submissions and ownership claims.

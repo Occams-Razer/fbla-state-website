@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { HomeHero, HowItWorks } from "@/components/home";
+import { HomeHero, HowItWorks, ReviewsSection } from "@/components/home";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -8,6 +8,7 @@ export default function Home() {
       <div className={styles.page}>
         <HomeHero />
         <HowItWorks />
+        <ReviewsSection />
       </div>
     </AppShell>
   );

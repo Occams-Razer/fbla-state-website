@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
@@ -216,7 +217,9 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   return (
                     <Card key={item.id} className={styles.entryCard}>
                       <div className={styles.entryHeader}>
-                        <h2 className={styles.entryTitle}>{item.title}</h2>
+                        <Link className={styles.entryTitleLink} href={`/items/${item.id}`} target="_blank" rel="noopener noreferrer">
+                          <h2 className={styles.entryTitle}>{item.title} ↗</h2>
+                        </Link>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
                           {item.status}
                         </span>
@@ -319,9 +322,14 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   return (
                     <Card key={claim.id} className={styles.entryCard}>
                       <div className={styles.entryHeader}>
-                        <h2 className={styles.entryTitle}>
-                          {claim.name}{claim.item?.title ? ` · ${claim.item.title}` : ""}
-                        </h2>
+                        <div>
+                          <h2 className={styles.entryTitle}>{claim.name}</h2>
+                          {claim.item?.id ? (
+                            <Link className={styles.claimItemLink} href={`/items/${claim.item.id}`} target="_blank" rel="noopener noreferrer">
+                              {claim.item.title ?? "View item"} ↗
+                            </Link>
+                          ) : null}
+                        </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
                           {claim.status}
                         </span>

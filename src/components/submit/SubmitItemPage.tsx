@@ -265,32 +265,34 @@ export function SubmitItemPage() {
           </div>
 
           <div className={styles.field}>
-            <span className={styles.label}>
-              Item photo <span className={styles.required}>*</span>
-            </span>
-            <label
-              className={[
-                styles.fileInputLabel,
-                isBusy ? styles.fileInputLabelBusy : "",
-                uploadStatus === "uploaded" ? styles.fileInputLabelUploaded : "",
-              ].filter(Boolean).join(" ")}
-              htmlFor="item-image"
-            >
-              {uploadStatus === "uploading" ? (
-                <>
-                  <span aria-hidden="true" className={styles.fileInputSpinner} />
-                  <span>Uploading...</span>
-                </>
-              ) : uploadButtonLabel}
-            </label>
-            <input
-              accept="image/*"
-              className={styles.fileInputHidden}
-              disabled={isBusy}
-              id="item-image"
-              onChange={handleImageUpload}
-              type="file"
-            />
+            <div className={styles.fileInputRow}>
+              <span className={styles.label}>
+                Item photo <span className={styles.required}>*</span>
+              </span>
+              <label
+                className={[
+                  styles.fileInputLabel,
+                  isBusy ? styles.fileInputLabelBusy : "",
+                  uploadStatus === "uploaded" ? styles.fileInputLabelUploaded : "",
+                ].filter(Boolean).join(" ")}
+                htmlFor="item-image"
+              >
+                {uploadStatus === "uploading" ? (
+                  <>
+                    <span aria-hidden="true" className={styles.fileInputSpinner} />
+                    <span>Uploading...</span>
+                  </>
+                ) : uploadButtonLabel}
+              </label>
+              <input
+                accept="image/*"
+                className={styles.fileInputHidden}
+                disabled={isBusy}
+                id="item-image"
+                onChange={handleImageUpload}
+                type="file"
+              />
+            </div>
             {errors.image ? (
               <p className={styles.fieldError} role="alert">
                 {errors.image}
