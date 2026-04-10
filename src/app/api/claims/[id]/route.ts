@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { claimPatchSchema, formatZodError } from "@/lib/schemas";
+import { sendClaimApprovedEmail } from "@/lib/email";
 
 async function syncItemClaimState(itemId: string) {
   const approvedClaims = await prisma.claim.count({
@@ -87,6 +88,17 @@ export async function PATCH(
 
     if (!hydratedClaim) {
       return NextResponse.json({ error: "Claim not found" }, { status: 404 });
+    }
+
+    if (parsed.data.status === "APPROVED" && hydratedClaim.item) {
+      void sendClaimApprovedEmail(
+        { id: hydratedClaim.id, name: hydratedClaim.name, email: hydratedClaim.email },
+        {
+          title: hydratedClaim.item.title,
+          category: hydratedClaim.item.category,
+          location: hydratedClaim.item.location,
+        },
+      );
     }
 
     return NextResponse.json(hydratedClaim);

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { itemCreateSchema, itemListQuerySchema, formatZodError } from "@/lib/schemas";
 import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { sendNewItemAdminEmail } from "@/lib/email";
 
 const ITEM_POST_WINDOW_MS = 60 * 1000;
 const ITEM_POST_MAX = 10;
@@ -97,6 +98,8 @@ export async function POST(request: Request) {
         imageUrl: data.imageUrl,
       },
     });
+
+    void sendNewItemAdminEmail(newItem);
 
     const response = NextResponse.json(
       {

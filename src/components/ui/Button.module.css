@@ -1,13 +1,16 @@
 .button {
   align-items: center;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md) !important;
   cursor: pointer;
-  display: inline-flex;
+  display: inline-flex !important;
   font-weight: 700;
+  font-family: inherit !important;
   gap: var(--space-2);
   justify-content: center;
   line-height: 1;
+  overflow: hidden;
+  position: relative;
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
