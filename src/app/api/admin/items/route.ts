@@ -4,6 +4,28 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { adminItemsQuerySchema, formatZodError } from "@/lib/schemas";
 
+type ClearableStatus = "APPROVED" | "REJECTED";
+
+export async function DELETE(request: Request) {
+  const auth = await requireAdminSession(request);
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status") as ClearableStatus | null;
+    if (status !== "APPROVED" && status !== "REJECTED") {
+      return NextResponse.json({ error: "status must be APPROVED or REJECTED" }, { status: 400 });
+    }
+    const result = await prisma.item.updateMany({
+      where: { status, isDeleted: false },
+      data: { isDeleted: true },
+    });
+    return NextResponse.json({ cleared: result.count });
+  } catch {
+    return NextResponse.json({ error: "Failed to clear items" }, { status: 500 });
+  }
+}
+
 export async function GET(request: Request) {
   const auth = await requireAdminSession(request);
   if (auth instanceof NextResponse) return auth;

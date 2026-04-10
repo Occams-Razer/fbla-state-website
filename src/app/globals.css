@@ -81,7 +81,12 @@ textarea {
   font: inherit;
 }
 
-img,
+img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
 svg {
   display: block;
   max-width: 100%;

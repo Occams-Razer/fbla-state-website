@@ -77,6 +77,23 @@
   color: var(--color-primary);
 }
 
+.userTile {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  transition: background-color 180ms ease;
+}
+
+.userTile:hover {
+  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
 .authPlaceholder {
   height: 2.25rem;
   width: 4.5rem;
