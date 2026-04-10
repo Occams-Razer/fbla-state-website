@@ -29,6 +29,22 @@ export async function POST(request: Request) {
     }
     const { itemId, name, email, proofOfOwnership, locationLost } = parsed.data;
 
+    const item = await prisma.item.findUnique({
+      where: { id: itemId },
+      select: {
+        id: true,
+        status: true,
+        isDeleted: true,
+      },
+    });
+
+    if (!item || item.isDeleted || item.status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "This item is not available for claims." },
+        { status: 409 },
+      );
+    }
+
     const newClaim = await prisma.claim.create({
       data: {
         itemId,
@@ -49,7 +65,8 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
-  } catch {
+  } catch (error) {
+    console.error("[claims POST]", error);
     return NextResponse.json({ error: "Failed to submit claim" }, { status: 500 });
   }
 }
@@ -90,7 +107,8 @@ export async function GET(request: Request) {
       pageSize: limit,
       totalPages,
     });
-  } catch {
+  } catch (error) {
+    console.error("[claims GET]", error);
     return NextResponse.json({ error: "Failed to fetch claims" }, { status: 500 });
   }
 }

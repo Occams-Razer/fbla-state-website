@@ -1,10 +1,16 @@
+import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
 import { AdminDashboardPage } from "@/components/admin";
 import { AppShell } from "@/components/layout/AppShell";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const session = sessionCookie ? await verifySessionToken(sessionCookie) : null;
+
   return (
     <AppShell>
-      <AdminDashboardPage />
+      <AdminDashboardPage initialAuthenticated={Boolean(session)} />
     </AppShell>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import styles from "./Navbar.module.css";
-import { NavbarUserMenu } from "./NavbarUserMenu";
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -24,7 +23,9 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <NavbarUserMenu />
+          <Link className={styles.signIn} href="/login">
+            Sign in
+          </Link>
         </nav>
       </div>
     </header>

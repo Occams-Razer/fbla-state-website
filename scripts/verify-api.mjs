@@ -26,14 +26,12 @@ async function main() {
   await waitForServer();
   const results = [];
 
-  // GET /api/items (paginated)
   let r = await fetch(`${base}/api/items`);
   assert(r.ok, `GET /api/items expected 200, got ${r.status}`);
   const listJson = await r.json();
   assert(Array.isArray(listJson.items), "GET /api/items should return { items: [] }");
   results.push("GET /api/items OK");
 
-  // POST /api/upload (1×1 PNG)
   const pngBytes = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
     "base64",
@@ -47,24 +45,21 @@ async function main() {
   const uploadedImageUrl = up.url;
   results.push("POST /api/upload OK");
 
-  // GET /api/admin/items without auth
   r = await fetch(`${base}/api/admin/items`);
   assert(r.status === 401, `GET /api/admin/items unauthenticated expected 401, got ${r.status}`);
-  results.push("GET /api/admin/items → 401 without cookie OK");
+  results.push("GET /api/admin/items -> 401 without cookie OK");
 
-  // POST /api/auth/login bad password
   r = await fetch(`${base}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username: "admin", password: "wrong-password-xyz" }),
   });
   assert(r.status === 401, `login bad password expected 401, got ${r.status}`);
-  results.push("POST /api/auth/login invalid → 401 OK");
+  results.push("POST /api/auth/login invalid -> 401 OK");
 
   const pass = process.env.VERIFY_ADMIN_PASSWORD;
   assert(pass, "Set VERIFY_ADMIN_PASSWORD (same as SEED_ADMIN_PASSWORD used for db:seed)");
 
-  // POST /api/auth/login good
   r = await fetch(`${base}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -74,56 +69,50 @@ async function main() {
   const setCookies = r.headers.getSetCookie?.() ?? [];
   const sessionPart = setCookies.find((c) => c.startsWith("admin_session="));
   assert(sessionPart, "login should Set-Cookie admin_session");
-  results.push("POST /api/auth/login → session cookie OK");
+  results.push("POST /api/auth/login -> session cookie OK");
 
   const jar = sessionPart.split(";")[0].trim();
 
-  // PATCH / DELETE /api/items/[id] without auth (bogus id — must fail before DB)
   r = await fetch(`${base}/api/items/clxxxxxxxxxxxxxxxxxxxxxxxx`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: "APPROVED" }),
   });
   assert(r.status === 401, `PATCH /api/items/[id] unauthenticated expected 401, got ${r.status}`);
-  results.push("PATCH /api/items/[id] → 401 without cookie OK");
+  results.push("PATCH /api/items/[id] -> 401 without cookie OK");
 
   r = await fetch(`${base}/api/items/clxxxxxxxxxxxxxxxxxxxxxxxx`, { method: "DELETE" });
   assert(r.status === 401, `DELETE /api/items/[id] unauthenticated expected 401, got ${r.status}`);
-  results.push("DELETE /api/items/[id] → 401 without cookie OK");
+  results.push("DELETE /api/items/[id] -> 401 without cookie OK");
 
-  // PATCH / DELETE /api/claims/[id] without auth
   r = await fetch(`${base}/api/claims/clxxxxxxxxxxxxxxxxxxxxxxxx`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: "REJECTED" }),
   });
   assert(r.status === 401, `PATCH /api/claims/[id] unauthenticated expected 401, got ${r.status}`);
-  results.push("PATCH /api/claims/[id] → 401 without cookie OK");
+  results.push("PATCH /api/claims/[id] -> 401 without cookie OK");
 
   r = await fetch(`${base}/api/claims/clxxxxxxxxxxxxxxxxxxxxxxxx`, { method: "DELETE" });
   assert(r.status === 401, `DELETE /api/claims/[id] unauthenticated expected 401, got ${r.status}`);
-  results.push("DELETE /api/claims/[id] → 401 without cookie OK");
+  results.push("DELETE /api/claims/[id] -> 401 without cookie OK");
 
-  // GET /api/admin/items with auth
   r = await fetch(`${base}/api/admin/items`, { headers: { Cookie: jar } });
   assert(r.ok, `GET /api/admin/items authed expected 200, got ${r.status}`);
   const adminItems = await r.json();
   assert(Array.isArray(adminItems.items), "admin items should be paginated");
   results.push("GET /api/admin/items (auth) OK");
 
-  // GET /api/claims without auth
   r = await fetch(`${base}/api/claims`);
   assert(r.status === 401, `GET /api/claims expected 401, got ${r.status}`);
-  results.push("GET /api/claims → 401 without cookie OK");
+  results.push("GET /api/claims -> 401 without cookie OK");
 
-  // GET /api/claims with auth
   r = await fetch(`${base}/api/claims`, { headers: { Cookie: jar } });
   assert(r.ok, `GET /api/claims authed expected 200, got ${r.status}`);
   const claimsJson = await r.json();
   assert(Array.isArray(claimsJson.claims), "claims list paginated");
   results.push("GET /api/claims (auth) OK");
 
-  // POST item (public)
   r = await fetch(`${base}/api/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -141,12 +130,10 @@ async function main() {
   assert(itemId, "created item should have id");
   results.push("POST /api/items OK");
 
-  // GET item by id while PENDING → 404
   r = await fetch(`${base}/api/items/${itemId}`);
   assert(r.status === 404, `GET pending item by id expected 404, got ${r.status}`);
-  results.push("GET /api/items/[id] pending → 404 OK");
+  results.push("GET /api/items/[id] pending -> 404 OK");
 
-  // PATCH approve
   r = await fetch(`${base}/api/items/${itemId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Cookie: jar },
@@ -155,12 +142,10 @@ async function main() {
   assert(r.ok, `PATCH item expected 200, got ${r.status}`);
   results.push("PATCH /api/items/[id] (auth) OK");
 
-  // GET public item now 200
   r = await fetch(`${base}/api/items/${itemId}`);
   assert(r.ok, `GET approved item expected 200, got ${r.status}`);
   results.push("GET /api/items/[id] approved OK");
 
-  // POST claim
   r = await fetch(`${base}/api/claims`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -178,7 +163,34 @@ async function main() {
   assert(claimId, "claim id returned");
   results.push("POST /api/claims OK");
 
-  // GET claim status (public lookup)
+  r = await fetch(`${base}/api/items`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: "Verify Pending Claim Block",
+      description: "smoke",
+      category: "Other",
+      location: "Hall",
+      imageUrl: uploadedImageUrl,
+    }),
+  });
+  assert(r.status === 201, `POST pending item expected 201, got ${r.status}`);
+  const pendingItemId = (await r.json()).id;
+
+  r = await fetch(`${base}/api/claims`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      itemId: pendingItemId,
+      name: "Pending User",
+      email: "pending-user@example.com",
+      proofOfOwnership: "Description of item",
+      locationLost: "Room 1",
+    }),
+  });
+  assert(r.status === 409, `POST /api/claims pending item expected 409, got ${r.status}`);
+  results.push("POST /api/claims rejects non-claimable items OK");
+
   const statusUrl = new URL(`${base}/api/claims/status`);
   statusUrl.searchParams.set("claimId", claimId);
   statusUrl.searchParams.set("email", "verify-test@example.com");
@@ -188,7 +200,6 @@ async function main() {
   assert(st.status === "PENDING", "claim status PENDING");
   results.push("GET /api/claims/status OK");
 
-  // PATCH first claim → REJECTED
   r = await fetch(`${base}/api/claims/${claimId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Cookie: jar },
@@ -197,7 +208,6 @@ async function main() {
   assert(r.ok, `PATCH claim REJECTED expected 200, got ${r.status}`);
   results.push("PATCH /api/claims/[id] REJECTED (auth) OK");
 
-  // Second item + claim → APPROVED (item becomes CLAIMED)
   r = await fetch(`${base}/api/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -211,6 +221,7 @@ async function main() {
   });
   assert(r.status === 201, `POST item B expected 201, got ${r.status}`);
   const itemB = (await r.json()).id;
+
   r = await fetch(`${base}/api/items/${itemB}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Cookie: jar },
@@ -238,9 +249,25 @@ async function main() {
     body: JSON.stringify({ status: "APPROVED" }),
   });
   assert(r.ok, `PATCH claim APPROVED expected 200, got ${r.status}`);
-  results.push("PATCH /api/claims/[id] APPROVED → item CLAIMED (auth) OK");
+  results.push("PATCH /api/claims/[id] APPROVED -> item CLAIMED (auth) OK");
 
-  // Third claim — DELETE (soft archive)
+  r = await fetch(`${base}/api/claims/${claimBId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Cookie: jar },
+    body: JSON.stringify({ status: "REJECTED" }),
+  });
+  assert(r.ok, `PATCH claim back to REJECTED expected 200, got ${r.status}`);
+
+  r = await fetch(`${base}/api/admin/items`, { headers: { Cookie: jar } });
+  assert(r.ok, `GET /api/admin/items after claim revert expected 200, got ${r.status}`);
+  const adminItemsAfterRevert = await r.json();
+  const revertedItem = adminItemsAfterRevert.items.find((entry) => entry.id === itemB);
+  assert(
+    revertedItem?.status === "APPROVED",
+    "item should return to APPROVED after approved claim is revoked",
+  );
+  results.push("PATCH /api/claims/[id] revert resets item from CLAIMED OK");
+
   r = await fetch(`${base}/api/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -254,6 +281,7 @@ async function main() {
   });
   assert(r.status === 201, `POST item C expected 201, got ${r.status}`);
   const itemC = (await r.json()).id;
+
   r = await fetch(`${base}/api/items/${itemC}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Cookie: jar },
@@ -288,7 +316,6 @@ async function main() {
   );
   results.push("GET /api/claims excludes soft-deleted OK");
 
-  // Fourth item — DELETE item (soft archive)
   r = await fetch(`${base}/api/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -302,12 +329,14 @@ async function main() {
   });
   assert(r.status === 201, `POST item D expected 201, got ${r.status}`);
   const itemD = (await r.json()).id;
+
   r = await fetch(`${base}/api/items/${itemD}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Cookie: jar },
     body: JSON.stringify({ status: "APPROVED" }),
   });
   assert(r.ok, `PATCH item D expected 200, got ${r.status}`);
+
   r = await fetch(`${base}/api/items/${itemD}`);
   assert(r.ok, `GET item D public expected 200, got ${r.status}`);
 
@@ -317,9 +346,8 @@ async function main() {
 
   r = await fetch(`${base}/api/items/${itemD}`);
   assert(r.status === 404, `GET archived item expected 404, got ${r.status}`);
-  results.push("GET /api/items/[id] after DELETE → 404 OK");
+  results.push("GET /api/items/[id] after DELETE -> 404 OK");
 
-  // POST logout
   r = await fetch(`${base}/api/auth/logout`, { method: "POST", headers: { Cookie: jar } });
   assert(r.ok, `logout expected 200, got ${r.status}`);
   results.push("POST /api/auth/logout OK");

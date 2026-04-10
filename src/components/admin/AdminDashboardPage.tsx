@@ -6,8 +6,6 @@ import {
   fetchAdminItems,
   fetchClaims,
   loginAdmin,
-  logoutAdmin,
-  updateAdminProfile,
   updateClaimStatus,
   updateItemStatus,
 } from "@/lib/api";
@@ -15,8 +13,7 @@ import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
 
-type TabKey = "items" | "claims" | "profile";
-
+type TabKey = "items" | "claims";
 type ItemFilter = "ALL" | ItemStatus;
 
 interface LoginFormState {
@@ -24,11 +21,8 @@ interface LoginFormState {
   password: string;
 }
 
-interface ProfileFormState {
-  currentPassword: string;
-  newUsername: string;
-  newPassword: string;
-  confirmPassword: string;
+interface AdminDashboardPageProps {
+  initialAuthenticated?: boolean;
 }
 
 const ITEM_FILTER_OPTIONS: Array<{ label: string; value: ItemFilter }> = [
@@ -44,13 +38,6 @@ const INITIAL_LOGIN_FORM: LoginFormState = {
   username: "",
 };
 
-const INITIAL_PROFILE_FORM: ProfileFormState = {
-  currentPassword: "",
-  newUsername: "",
-  newPassword: "",
-  confirmPassword: "",
-};
-
 function formatDate(value: string) {
   const parsedDate = new Date(value);
   if (Number.isNaN(parsedDate.getTime())) {
@@ -64,12 +51,13 @@ function formatDate(value: string) {
   }).format(parsedDate);
 }
 
-export function AdminDashboardPage() {
+export function AdminDashboardPage({
+  initialAuthenticated = false,
+}: AdminDashboardPageProps) {
   const [loginForm, setLoginForm] = useState<LoginFormState>(INITIAL_LOGIN_FORM);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [adminUsername, setAdminUsername] = useState<string>("");
+  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
 
   const [activeTab, setActiveTab] = useState<TabKey>("items");
   const [itemFilter, setItemFilter] = useState<ItemFilter>("ALL");
@@ -85,11 +73,6 @@ export function AdminDashboardPage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
 
-  const [profileForm, setProfileForm] = useState<ProfileFormState>(INITIAL_PROFILE_FORM);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-
   const visibleItems = useMemo(() => {
     if (itemFilter === "ALL") {
       return items;
@@ -99,18 +82,8 @@ export function AdminDashboardPage() {
   }, [itemFilter, items]);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((data: { authenticated: boolean; username?: string }) => {
-        if (data.authenticated && data.username) {
-          setIsAuthenticated(true);
-          setAdminUsername(data.username);
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => setIsAuthenticated(false));
-  }, []);
+    setIsAuthenticated(initialAuthenticated);
+  }, [initialAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -127,9 +100,18 @@ export function AdminDashboardPage() {
         const results = await fetchAdminItems();
         if (!ignore) {
           setItems(results.items);
+          setLoginError(null);
         }
       } catch (error) {
         if (ignore) {
+          return;
+        }
+
+        if (isApiError(error) && error.status === 401) {
+          setIsAuthenticated(false);
+          setItems([]);
+          setClaims([]);
+          setLoginError("Your session expired. Please sign in again.");
           return;
         }
 
@@ -153,9 +135,18 @@ export function AdminDashboardPage() {
         const results = await fetchClaims();
         if (!ignore) {
           setClaims(results.claims);
+          setLoginError(null);
         }
       } catch (error) {
         if (ignore) {
+          return;
+        }
+
+        if (isApiError(error) && error.status === 401) {
+          setIsAuthenticated(false);
+          setItems([]);
+          setClaims([]);
+          setLoginError("Your session expired. Please sign in again.");
           return;
         }
 
@@ -183,12 +174,6 @@ export function AdminDashboardPage() {
     setLoginForm((previous) => ({ ...previous, [field]: value }));
   }
 
-  function updateProfileField(field: keyof ProfileFormState, value: string) {
-    setProfileForm((previous) => ({ ...previous, [field]: value }));
-    setProfileError(null);
-    setProfileSuccess(null);
-  }
-
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoginError(null);
@@ -200,13 +185,17 @@ export function AdminDashboardPage() {
 
     try {
       setIsLoggingIn(true);
+      setActionError(null);
+      setActionSuccess(null);
       const response = await loginAdmin({
         password: loginForm.password,
         username: loginForm.username.trim(),
       });
 
       if (response.authenticated) {
-        window.location.href = "/admin";
+        setIsAuthenticated(true);
+        setActionSuccess("Logged in. Dashboard data is ready.");
+        setLoginForm(INITIAL_LOGIN_FORM);
       } else {
         setLoginError("Invalid credentials.");
       }
@@ -218,65 +207,6 @@ export function AdminDashboardPage() {
       }
     } finally {
       setIsLoggingIn(false);
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      await logoutAdmin();
-    } catch {
-      // ignore logout errors
-    }
-    window.location.href = "/login";
-  }
-
-  async function handleProfileSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setProfileError(null);
-    setProfileSuccess(null);
-
-    if (!profileForm.currentPassword) {
-      setProfileError("Current password is required.");
-      return;
-    }
-
-    if (!profileForm.newUsername && !profileForm.newPassword) {
-      setProfileError("Enter a new username, new password, or both.");
-      return;
-    }
-
-    if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-      setProfileError("New passwords do not match.");
-      return;
-    }
-
-    if (profileForm.newPassword && profileForm.newPassword.length < 8) {
-      setProfileError("New password must be at least 8 characters.");
-      return;
-    }
-
-    try {
-      setIsSavingProfile(true);
-      await updateAdminProfile({
-        currentPassword: profileForm.currentPassword,
-        newUsername: profileForm.newUsername || undefined,
-        newPassword: profileForm.newPassword || undefined,
-      });
-
-      if (profileForm.newUsername) {
-        setAdminUsername(profileForm.newUsername);
-      }
-
-      setProfileSuccess("Profile updated successfully.");
-      setProfileForm(INITIAL_PROFILE_FORM);
-    } catch (error) {
-      if (isApiError(error)) {
-        setProfileError(error.message);
-      } else {
-        setProfileError("Failed to update profile.");
-      }
-    } finally {
-      setIsSavingProfile(false);
     }
   }
 
@@ -312,7 +242,11 @@ export function AdminDashboardPage() {
     try {
       const updated = await updateClaimStatus(claim.id, { status: nextStatus });
       setClaims((previous) =>
-        previous.map((entry) => (entry.id === claim.id ? updated : entry)),
+        previous.map((entry) =>
+          entry.id === claim.id
+            ? { ...entry, ...updated, item: updated.item ?? entry.item }
+            : entry,
+        ),
       );
       setActionSuccess(`Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`);
     } catch (error) {
@@ -326,49 +260,47 @@ export function AdminDashboardPage() {
     }
   }
 
-  if (isAuthenticated === null) {
-    return null;
-  }
-
   if (!isAuthenticated) {
     return (
-      <div className={styles.loginPage}>
-        <div className={styles.loginBox}>
-          <h1 className={styles.loginTitle}>Admin Sign In</h1>
-          <p className={styles.loginSubtitle}>
+      <div className={styles.page}>
+        <section aria-labelledby="admin-login-title" className={styles.header}>
+          <h1 className={styles.title} id="admin-login-title">
+            Admin Dashboard Login
+          </h1>
+          <p className={styles.subtitle}>
             Sign in to review found item submissions and ownership claims.
           </p>
+        </section>
 
-          <Card className={styles.loginCard}>
-            <form className={styles.loginForm} onSubmit={handleLogin}>
-              <Input
-                autoComplete="username"
-                label="Username"
-                onChange={(event) => updateLoginField("username", event.target.value)}
-                required
-                value={loginForm.username}
-              />
-              <Input
-                autoComplete="current-password"
-                label="Password"
-                onChange={(event) => updateLoginField("password", event.target.value)}
-                required
-                type="password"
-                value={loginForm.password}
-              />
+        <Card className={styles.loginCard}>
+          <form className={styles.loginForm} onSubmit={handleLogin}>
+            <Input
+              autoComplete="username"
+              label="Username"
+              onChange={(event) => updateLoginField("username", event.target.value)}
+              required
+              value={loginForm.username}
+            />
+            <Input
+              autoComplete="current-password"
+              label="Password"
+              onChange={(event) => updateLoginField("password", event.target.value)}
+              required
+              type="password"
+              value={loginForm.password}
+            />
 
-              {loginError ? (
-                <p className={styles.errorText} role="alert">
-                  {loginError}
-                </p>
-              ) : null}
+            {loginError ? (
+              <p className={styles.errorText} role="alert">
+                {loginError}
+              </p>
+            ) : null}
 
-              <Button loading={isLoggingIn} size="lg" type="submit">
-                Sign in
-              </Button>
-            </form>
-          </Card>
-        </div>
+            <Button loading={isLoggingIn} size="lg" type="submit">
+              Sign in
+            </Button>
+          </form>
+        </Card>
       </div>
     );
   }
@@ -376,19 +308,12 @@ export function AdminDashboardPage() {
   return (
     <div className={styles.page}>
       <section aria-labelledby="admin-dashboard-title" className={styles.header}>
-        <div className={styles.headerRow}>
-          <div>
-            <h1 className={styles.title} id="admin-dashboard-title">
-              Admin Dashboard
-            </h1>
-            <p className={styles.subtitle}>
-              Signed in as <strong>{adminUsername}</strong>. Moderate item listings and resolve claim requests.
-            </p>
-          </div>
-          <Button onClick={handleLogout} size="sm" variant="ghost">
-            Sign out
-          </Button>
-        </div>
+        <h1 className={styles.title} id="admin-dashboard-title">
+          Admin Dashboard
+        </h1>
+        <p className={styles.subtitle}>
+          Moderate item listings and resolve claim requests.
+        </p>
       </section>
 
       <div className={styles.tabBar} role="tablist" aria-label="Admin data tabs">
@@ -409,15 +334,6 @@ export function AdminDashboardPage() {
           type="button"
         >
           Claims
-        </button>
-        <button
-          aria-selected={activeTab === "profile"}
-          className={styles.tabButton}
-          onClick={() => setActiveTab("profile")}
-          role="tab"
-          type="button"
-        >
-          Profile
         </button>
       </div>
 
@@ -596,68 +512,6 @@ export function AdminDashboardPage() {
               })}
             </div>
           ) : null}
-        </section>
-      ) : null}
-
-      {activeTab === "profile" ? (
-        <section className={styles.section} role="tabpanel">
-          <Card className={styles.profileCard}>
-            <h2 className={styles.profileCardTitle}>Change Credentials</h2>
-            <p className={styles.mutedText}>
-              Update your admin username or password. Current password is required to confirm changes.
-            </p>
-
-            <form className={styles.profileForm} onSubmit={handleProfileSave}>
-              <Input
-                autoComplete="current-password"
-                label="Current Password"
-                onChange={(event) => updateProfileField("currentPassword", event.target.value)}
-                required
-                type="password"
-                value={profileForm.currentPassword}
-              />
-
-              <hr className={styles.profileDivider} />
-
-              <Input
-                autoComplete="username"
-                hint="Leave blank to keep current username"
-                label="New Username"
-                onChange={(event) => updateProfileField("newUsername", event.target.value)}
-                value={profileForm.newUsername}
-              />
-              <Input
-                autoComplete="new-password"
-                hint="Leave blank to keep current password (min 8 characters)"
-                label="New Password"
-                onChange={(event) => updateProfileField("newPassword", event.target.value)}
-                type="password"
-                value={profileForm.newPassword}
-              />
-              <Input
-                autoComplete="new-password"
-                label="Confirm New Password"
-                onChange={(event) => updateProfileField("confirmPassword", event.target.value)}
-                type="password"
-                value={profileForm.confirmPassword}
-              />
-
-              {profileError ? (
-                <p className={styles.errorText} role="alert">
-                  {profileError}
-                </p>
-              ) : null}
-              {profileSuccess ? (
-                <p className={styles.successText} role="status">
-                  {profileSuccess}
-                </p>
-              ) : null}
-
-              <Button loading={isSavingProfile} size="md" type="submit">
-                Save Changes
-              </Button>
-            </form>
-          </Card>
         </section>
       ) : null}
     </div>
