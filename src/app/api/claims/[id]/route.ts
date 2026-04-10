@@ -64,12 +64,10 @@ export async function PATCH(
 
     if (
       parsed.data.status === "APPROVED" &&
-      (!existingClaim.item ||
-        existingClaim.item.isDeleted ||
-        !["APPROVED", "CLAIMED"].includes(existingClaim.item.status))
+      (!existingClaim.item || existingClaim.item.isDeleted)
     ) {
       return NextResponse.json(
-        { error: "Only active approved items can have approved claims." },
+        { error: "Cannot approve a claim for an archived or missing item." },
         { status: 409 },
       );
     }

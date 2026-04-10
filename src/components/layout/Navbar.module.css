@@ -79,19 +79,20 @@
 
 .userTile {
   align-items: center;
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
   border-radius: var(--radius-pill);
-  color: var(--color-primary);
+  color: var(--color-text-muted);
   display: inline-flex;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.4rem;
   padding: 0.45rem 0.85rem;
-  transition: background-color 180ms ease;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 .userTile:hover {
-  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  background: color-mix(in srgb, var(--color-text-muted) 24%, transparent);
+  color: var(--color-text);
 }
 
 .authPlaceholder {
@@ -143,6 +144,30 @@
 .signOut:hover {
   border-color: var(--color-danger);
   color: var(--color-danger);
+}
+
+.signIn {
+  background: var(--color-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.45rem 0.8rem;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 100ms ease;
+}
+
+.signIn:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 14px rgba(239, 116, 0, 0.3);
+}
+
+.signIn:active {
+  transform: scale(0.97);
 }
 
 @media (max-width: 720px) {

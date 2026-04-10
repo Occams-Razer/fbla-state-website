@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { Button, Card, Modal } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import {
+  clearClaimsByStatus,
+  fetchAdminItemById,
+  clearItemsByStatus,
+  fetchAdminItems,
+  fetchClaims,
+  updateClaimStatus,
+  updateItemStatus,
+} from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
@@ -62,6 +70,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
+  const [clearingKey, setClearingKey] = useState<string | null>(null);
 
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
@@ -140,7 +149,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
     setViewItem(null);
     setViewItemLoading(true);
     try {
-      const item = await fetchItemById(id);
+      const item = await fetchAdminItemById(id);
       setViewItem(item);
     } catch {
       // item stays null — modal shows error state
@@ -152,6 +161,63 @@ export function AdminDashboardPage({ username }: { username: string }) {
   function handleCloseView() {
     setViewItemId(null);
     setViewItem(null);
+  }
+
+  function handleCardKeyDown(event: ReactKeyboardEvent<HTMLElement>, onActivate: () => void) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
+  }
+
+  async function handleClearItems(status: "APPROVED" | "REJECTED") {
+    const totalForStatus = items.filter((item) => item.status === status).length;
+    if (totalForStatus === 0) {
+      return;
+    }
+
+    const key = `clear:items:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearItemsByStatus(status);
+      setItems((previous) => previous.filter((item) => item.status !== status));
+      setSnackbar({
+        message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not clear items.",
+        severity: "error",
+      });
+    } finally {
+      setClearingKey(null);
+    }
+  }
+
+  async function handleClearClaims(status: "APPROVED" | "REJECTED") {
+    const totalForStatus = claims.filter((claim) => claim.status === status).length;
+    if (totalForStatus === 0) {
+      return;
+    }
+
+    const key = `clear:claims:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearClaimsByStatus(status);
+      setClaims((previous) => previous.filter((claim) => claim.status !== status));
+      setSnackbar({
+        message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not clear claims.",
+        severity: "error",
+      });
+    } finally {
+      setClearingKey(null);
+    }
   }
 
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
@@ -187,26 +253,40 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
-            {([
-              { key: "PENDING",  label: "Submitted", cls: "" },
-              { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
-            ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={itemSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setItemSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabHeader}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
+              {([
+                { key: "PENDING", label: "Submitted", cls: "" },
+                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+              ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={itemSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setItemSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {items.filter((i) => i.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {itemSubTab === "APPROVED" || itemSubTab === "REJECTED" ? (
+              <Button
+                disabled={items.filter((item) => item.status === itemSubTab).length === 0}
+                loading={clearingKey === `clear:items:${itemSubTab}`}
+                onClick={() => handleClearItems(itemSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {items.filter((i) => i.status === key).length}
-                </span>
-              </button>
-            ))}
+                {itemSubTab === "APPROVED" ? "Clear Approved" : "Clear Rejected"}
+              </Button>
+            ) : null}
           </div>
 
           {/* Loading skeletons */}
@@ -237,11 +317,17 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `item:${item.id}:APPROVED`;
                   const rejectKey  = `item:${item.id}:REJECTED`;
                   return (
-                    <Card key={item.id} className={styles.entryCard}>
+                    <Card
+                      aria-label={`View details for ${item.title}`}
+                      className={`${styles.entryCard} ${styles.entryCardClickable}`}
+                      key={item.id}
+                      onClick={() => void handleViewItem(item.id)}
+                      onKeyDown={(event) => handleCardKeyDown(event, () => void handleViewItem(item.id))}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <div className={styles.entryHeader}>
-                        <button className={styles.entryTitleLink} onClick={() => handleViewItem(item.id)} type="button">
-                          <h2 className={styles.entryTitle}>{item.title}</h2>
-                        </button>
+                        <h2 className={styles.entryTitle}>{item.title}</h2>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
                           {item.status}
                         </span>
@@ -258,7 +344,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === rejectKey || item.status === "APPROVED"}
                               loading={activeActionKey === approveKey}
-                              onClick={() => handleItemStatusChange(item, "APPROVED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleItemStatusChange(item, "APPROVED");
+                              }}
                               size="sm"
                               variant="success"
                             >
@@ -271,7 +360,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === approveKey || item.status === "REJECTED"}
                               loading={activeActionKey === rejectKey}
-                              onClick={() => handleItemStatusChange(item, "REJECTED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleItemStatusChange(item, "REJECTED");
+                              }}
                               size="sm"
                               variant="danger"
                             >
@@ -293,26 +385,40 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
-            {([
-              { key: "PENDING",  label: "Pending",  cls: "" },
-              { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-            ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={claimSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setClaimSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabHeader}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
+              {([
+                { key: "PENDING", label: "Pending", cls: "" },
+                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+              ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={claimSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setClaimSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {claims.filter((c) => c.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {claimSubTab === "APPROVED" || claimSubTab === "REJECTED" ? (
+              <Button
+                disabled={claims.filter((claim) => claim.status === claimSubTab).length === 0}
+                loading={clearingKey === `clear:claims:${claimSubTab}`}
+                onClick={() => handleClearClaims(claimSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {claims.filter((c) => c.status === key).length}
-                </span>
-              </button>
-            ))}
+                {claimSubTab === "APPROVED" ? "Clear Approved" : "Clear Rejected"}
+              </Button>
+            ) : null}
           </div>
 
           {isLoadingClaims ? (
@@ -341,15 +447,32 @@ export function AdminDashboardPage({ username }: { username: string }) {
                 {visibleClaims.map((claim) => {
                   const approveKey = `claim:${claim.id}:APPROVED`;
                   const rejectKey  = `claim:${claim.id}:REJECTED`;
+                  const claimItemId = claim.item?.id;
+                  const isClaimCardClickable = Boolean(claimItemId);
                   return (
-                    <Card key={claim.id} className={styles.entryCard}>
+                    <Card
+                      aria-label={
+                        isClaimCardClickable
+                          ? `View item details for claim by ${claim.name}`
+                          : `Claim details for ${claim.name}`
+                      }
+                      className={`${styles.entryCard} ${isClaimCardClickable ? styles.entryCardClickable : ""}`}
+                      key={claim.id}
+                      onClick={isClaimCardClickable ? () => void handleViewItem(claimItemId as string) : undefined}
+                      onKeyDown={
+                        isClaimCardClickable
+                          ? (event) =>
+                              handleCardKeyDown(event, () => void handleViewItem(claimItemId as string))
+                          : undefined
+                      }
+                      role={isClaimCardClickable ? "button" : undefined}
+                      tabIndex={isClaimCardClickable ? 0 : undefined}
+                    >
                       <div className={styles.entryHeader}>
                         <div>
                           <h2 className={styles.entryTitle}>{claim.name}</h2>
                           {claim.item?.id ? (
-                            <button className={styles.claimItemLink} onClick={() => handleViewItem(claim.item!.id)} type="button">
-                              {claim.item.title ?? "View item"} →
-                            </button>
+                            <p className={styles.claimItemLabel}>{claim.item.title ?? "Linked item"}</p>
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
@@ -368,7 +491,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === rejectKey || claim.status === "APPROVED"}
                               loading={activeActionKey === approveKey}
-                              onClick={() => handleClaimStatusChange(claim, "APPROVED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleClaimStatusChange(claim, "APPROVED");
+                              }}
                               size="sm"
                               variant="success"
                             >
@@ -381,7 +507,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === approveKey || claim.status === "REJECTED"}
                               loading={activeActionKey === rejectKey}
-                              onClick={() => handleClaimStatusChange(claim, "REJECTED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleClaimStatusChange(claim, "REJECTED");
+                              }}
                               size="sm"
                               variant="danger"
                             >

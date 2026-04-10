@@ -138,6 +138,14 @@
   flex-wrap: wrap;
 }
 
+.subTabHeader {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
 .subTabButton {
   align-items: center;
   background: color-mix(in srgb, var(--color-surface) 90%, transparent);
@@ -224,6 +232,25 @@
 
 .entryCard {
   gap: var(--space-3);
+}
+
+.entryCardClickable {
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.entryCardClickable:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.entryCardClickable:active {
+  transform: translateY(-1px);
+}
+
+.entryCardClickable:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .entryHeader {
