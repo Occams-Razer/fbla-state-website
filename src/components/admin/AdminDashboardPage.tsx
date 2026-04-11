@@ -1,7 +1,6 @@
 "use client";
 
 import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
@@ -43,6 +42,17 @@ function statusTagClass(status: string): string {
   }
 }
 
+function formatStatus(status: string): string {
+  switch (status) {
+    case "PENDING":   return "Pending";
+    case "APPROVED":  return "Approved";
+    case "REJECTED":  return "Rejected";
+    case "CLAIMED":   return "Claimed";
+    case "PICKED_UP": return "Picked Up";
+    default:          return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  }
+}
+
 function SkeletonCard() {
   return (
     <Card className={styles.entryCard}>
@@ -59,7 +69,6 @@ function SkeletonCard() {
 }
 
 export function AdminDashboardPage({ username }: { username: string }) {
-  const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("items");
   const [itemSubTab, setItemSubTab] = useState<ItemSubTab>("PENDING");
   const [claimSubTab, setClaimSubTab] = useState<ClaimSubTab>("PENDING");
@@ -78,12 +87,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
   const [viewItemLoading, setViewItemLoading] = useState(false);
-  const [statsUpdateMessage, setStatsUpdateMessage] = useState("Dashboard synced.");
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [statsNoticePulse, setStatsNoticePulse] = useState(false);
 
-  function markStatsUpdated(message: string) {
-    setStatsUpdateMessage(message);
+  function markStatsUpdated() {
     setLastUpdatedAt(new Date());
     setStatsNoticePulse(true);
   }
@@ -110,7 +117,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         const results = await fetchAdminItems();
         if (!ignore) {
           setItems(results.items);
-          markStatsUpdated("Items refreshed.");
+          markStatsUpdated();
         }
       } catch (error) {
         if (ignore) return;
@@ -127,7 +134,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         const results = await fetchClaims();
         if (!ignore) {
           setClaims(results.claims);
-          markStatsUpdated("Claims refreshed.");
+          markStatsUpdated();
         }
       } catch (error) {
         if (ignore) return;
@@ -149,7 +156,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
       const updated = await updateItemStatus(item.id, { status: nextStatus });
       setItems((prev) => prev.map((e) => (e.id === item.id ? updated : e)));
       setSnackbar({ message: `Item "${item.title}" marked ${nextStatus.toLowerCase()}.`, severity: "success" });
-      markStatsUpdated(`Item ${item.title} marked ${nextStatus.toLowerCase()}.`);
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({ message: isApiError(error) ? error.message : "Could not update item status.", severity: "error" });
     } finally {
@@ -173,7 +180,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         );
       }
       setSnackbar({ message: `Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`, severity: "success" });
-      markStatsUpdated(`Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`);
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({ message: isApiError(error) ? error.message : "Could not update claim status.", severity: "error" });
     } finally {
@@ -232,7 +239,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
         severity: "success",
       });
-      markStatsUpdated(`Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`);
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({
         message: isApiError(error) ? error.message : "Could not clear items.",
@@ -258,7 +265,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
         severity: "success",
       });
-      markStatsUpdated(`Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`);
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({
         message: isApiError(error) ? error.message : "Could not clear claims.",
@@ -301,7 +308,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
             role="status"
           >
             <span aria-hidden="true" className={styles.quickStatsDot} />
-            <span>{statsUpdateMessage}</span>
             <span className={styles.quickStatsTime}>Updated {lastUpdatedLabel}</span>
           </p>
         </div>
@@ -437,7 +443,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                       <div className={styles.entryHeader}>
                         <h2 className={styles.entryTitle}>{item.title}</h2>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
-                          {item.status}
+                          {formatStatus(item.status)}
                         </span>
                       </div>
                       <dl className={styles.metaList}>
@@ -590,7 +596,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
-                          {claim.status}
+                          {formatStatus(claim.status)}
                         </span>
                       </div>
                       <dl className={styles.metaList}>
@@ -692,7 +698,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
               <img alt={`Photo of ${viewItem.title}`} className={styles.modalImage} src={viewItem.imageUrl} />
             ) : null}
             <dl className={styles.metaList}>
-              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{viewItem.status}</span></dd></div>
+              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{formatStatus(viewItem.status)}</span></dd></div>
               <div className={styles.metaRow}><dt>Category</dt><dd>{viewItem.category || "—"}</dd></div>
               <div className={styles.metaRow}><dt>Location</dt><dd>{viewItem.location || "—"}</dd></div>
               <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewItem.dateFound)}</dd></div>
