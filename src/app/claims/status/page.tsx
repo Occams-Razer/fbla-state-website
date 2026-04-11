@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button, Card, Input } from "@/components/ui";
 import { fetchClaimStatus } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
@@ -33,7 +34,7 @@ type ClaimResult = {
 const STATUS_CONFIG: Record<string, { label: string; icon: string; noteClass: string; note: string }> = {
   PENDING: {
     label: "Pending Review",
-    icon: "⏳",
+    icon: "○",
     noteClass: "notePending",
     note: "Your claim is under review. You will be notified by email once a decision is made.",
   },
@@ -48,6 +49,12 @@ const STATUS_CONFIG: Record<string, { label: string; icon: string; noteClass: st
     icon: "✕",
     noteClass: "noteRejected",
     note: "Your claim was not approved. Contact your school's office for more information.",
+  },
+  PICKED_UP: {
+    label: "Picked Up",
+    icon: "✓",
+    noteClass: "noteApproved",
+    note: "Your item has been picked up. Thank you for using Foundry!",
   },
 };
 
@@ -109,7 +116,7 @@ function EmptyPanel() {
   );
 }
 
-export default function ClaimStatusPage() {
+function ClaimStatusContent() {
   const searchParams = useSearchParams();
   const [lookup, setLookup] = useState<LookupState>(() => ({
     ...INITIAL_LOOKUP,
@@ -194,5 +201,15 @@ export default function ClaimStatusPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ClaimStatusPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={<div className={styles.page}><p>Loading…</p></div>}>
+        <ClaimStatusContent />
+      </Suspense>
+    </AppShell>
   );
 }
