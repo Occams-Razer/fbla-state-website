@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./Navbar.module.css";
 import { NavbarUserMenu } from "./NavbarUserMenu";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -32,6 +33,7 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <ThemeToggle />
           <NavbarUserMenu />
         </nav>
       </div>

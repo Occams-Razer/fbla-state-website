@@ -45,6 +45,32 @@
   --font-display: "Avenir Next", "Segoe UI", "Inter", sans-serif;
 }
 
+[data-theme="dark"] {
+  --color-bg: #14120e;
+  --color-surface: #1e1b15;
+  --color-surface-muted: #27231b;
+  --color-text: #f0ead8;
+  --color-text-muted: rgba(240, 234, 216, 0.55);
+  --color-border: rgba(240, 234, 216, 0.1);
+  --color-border-strong: rgba(240, 234, 216, 0.2);
+
+  --color-primary: #f07d10;
+  --color-primary-hover: #ff8c1a;
+  --color-primary-soft: #3d2000;
+
+  --color-success: #1abf57;
+  --color-warning: #d4a017;
+  --color-danger: #f05252;
+  --color-info: #5b8fee;
+  --color-neutral: #8a8a8a;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.65);
+
+  --focus-ring: 0 0 0 3px rgba(240, 125, 16, 0.4);
+  --focus-outline: 2px solid rgba(240, 125, 16, 0.8);
+}
+
 *,
 *::before,
 *::after {
