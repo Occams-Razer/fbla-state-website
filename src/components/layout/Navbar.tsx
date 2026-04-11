@@ -33,8 +33,8 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <ThemeToggle />
           <NavbarUserMenu />
+          <ThemeToggle />
         </nav>
       </div>
     </header>
