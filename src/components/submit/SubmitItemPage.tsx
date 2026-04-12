@@ -40,7 +40,10 @@ const INITIAL_FORM: SubmitFormState = {
   title: "",
 };
 
-function validateForm(form: SubmitFormState, imageUrl: string | null): FormErrors {
+function validateForm(
+  form: SubmitFormState,
+  imageUrl: string | null,
+): FormErrors {
   const errors: FormErrors = {};
 
   if (form.title.trim().length < 3) {
@@ -55,14 +58,21 @@ function validateForm(form: SubmitFormState, imageUrl: string | null): FormError
     errors.image = "A photo is required to submit an item.";
   }
 
-  if (form.description.trim().length > 0 && form.description.trim().length < 10) {
-    errors.description = "Description must be at least 10 characters when provided.";
+  if (
+    form.description.trim().length > 0 &&
+    form.description.trim().length < 10
+  ) {
+    errors.description =
+      "Description must be at least 10 characters when provided.";
   }
 
   if (form.dateFound) {
     const foundDate = new Date(form.dateFound);
     const now = new Date();
-    if (!Number.isNaN(foundDate.getTime()) && foundDate.getTime() > now.getTime()) {
+    if (
+      !Number.isNaN(foundDate.getTime()) &&
+      foundDate.getTime() > now.getTime()
+    ) {
       errors.dateFound = "Date found cannot be in the future.";
     }
   }
@@ -77,7 +87,9 @@ export function SubmitItemPage() {
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  const [uploadedImageName, setUploadedImageName] = useState<string | null>(null);
+  const [uploadedImageName, setUploadedImageName] = useState<string | null>(
+    null,
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -88,11 +100,17 @@ export function SubmitItemPage() {
 
   const uploadButtonLabel = useMemo(() => {
     if (uploadStatus === "uploading") return null; // spinner shown instead
-    if (uploadStatus === "uploaded") return uploadedImageName ? `\u2713 ${uploadedImageName}` : "\u2713 Image uploaded";
+    if (uploadStatus === "uploaded")
+      return uploadedImageName
+        ? `\u2713 ${uploadedImageName}`
+        : "\u2713 Image uploaded";
     return "Choose image";
   }, [uploadStatus, uploadedImageName]);
 
-  function updateField<K extends keyof SubmitFormState>(field: K, value: SubmitFormState[K]) {
+  function updateField<K extends keyof SubmitFormState>(
+    field: K,
+    value: SubmitFormState[K],
+  ) {
     setForm((previous) => ({ ...previous, [field]: value }));
     setErrors((previous) => {
       if (!previous[field]) {
@@ -194,7 +212,8 @@ export function SubmitItemPage() {
           Submit a Found Item
         </h1>
         <p className={styles.subtitle}>
-          Upload a clear photo and add details so the rightful owner can claim it.
+          Upload a clear photo and add details so the rightful owner can claim
+          it.
         </p>
       </section>
 
@@ -248,7 +267,9 @@ export function SubmitItemPage() {
                 className={styles.dateInput}
                 id="item-date-found"
                 max={new Date().toISOString().slice(0, 10)}
-                onChange={(event) => updateField("dateFound", event.target.value)}
+                onChange={(event) =>
+                  updateField("dateFound", event.target.value)
+                }
                 type="date"
                 value={form.dateFound}
               />
@@ -267,7 +288,9 @@ export function SubmitItemPage() {
             <textarea
               className={styles.textarea}
               id="item-description"
-              onChange={(event) => updateField("description", event.target.value)}
+              onChange={(event) =>
+                updateField("description", event.target.value)
+              }
               placeholder="Color, brand, unique marks, or any identifying details..."
               rows={4}
               value={form.description}
@@ -288,16 +311,25 @@ export function SubmitItemPage() {
                 className={[
                   styles.fileInputLabel,
                   isBusy ? styles.fileInputLabelBusy : "",
-                  uploadStatus === "uploaded" ? styles.fileInputLabelUploaded : "",
-                ].filter(Boolean).join(" ")}
+                  uploadStatus === "uploaded"
+                    ? styles.fileInputLabelUploaded
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 htmlFor="item-image"
               >
                 {uploadStatus === "uploading" ? (
                   <>
-                    <span aria-hidden="true" className={styles.fileInputSpinner} />
+                    <span
+                      aria-hidden="true"
+                      className={styles.fileInputSpinner}
+                    />
                     <span>Uploading...</span>
                   </>
-                ) : uploadButtonLabel}
+                ) : (
+                  uploadButtonLabel
+                )}
               </label>
               <input
                 accept="image/*"
@@ -321,7 +353,11 @@ export function SubmitItemPage() {
             {uploadedImageUrl ? (
               <div className={styles.previewWrap}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt="Uploaded item preview" className={styles.previewImage} src={uploadedImageUrl} />
+                <img
+                  alt="Uploaded item preview"
+                  className={styles.previewImage}
+                  src={uploadedImageUrl}
+                />
               </div>
             ) : null}
           </div>

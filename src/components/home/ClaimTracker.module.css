@@ -1,5 +1,5 @@
 .section {
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  background: var(--color-surface);
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
   border-radius: var(--radius-xl, var(--radius-lg));
   padding: var(--space-8) var(--space-6);
@@ -46,7 +46,7 @@
 }
 
 .errorText {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: 0.9rem;
   margin: 0;
 }
@@ -90,17 +90,17 @@
 
 .status_PENDING {
   background: color-mix(in srgb, orange 14%, transparent);
-  color: color-mix(in srgb, orange 80%, black);
+  color: var(--color-on-tint);
 }
 
 .status_APPROVED {
   background: color-mix(in srgb, var(--color-success) 14%, transparent);
-  color: var(--color-success);
+  color: var(--color-on-tint);
 }
 
 .status_REJECTED {
   background: color-mix(in srgb, var(--color-danger) 14%, transparent);
-  color: var(--color-danger);
+  color: var(--color-on-tint);
 }
 
 .statusNote {

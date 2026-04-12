@@ -16,7 +16,11 @@ export const muiTheme = createTheme({
   shape: { borderRadius: 10 },
   typography: {
     fontFamily:
-      '"Avenir Next","Segoe UI","Inter","Helvetica Neue",Helvetica,Arial,sans-serif',
+      'var(--font-metropolis),"Avenir Next","Segoe UI","Inter","Helvetica Neue",Helvetica,Arial,sans-serif',
+    fontWeightLight: 300,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+    fontWeightBold: 700,
   },
   components: {
     MuiButtonBase: {
