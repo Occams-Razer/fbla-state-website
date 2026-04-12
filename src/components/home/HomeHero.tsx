@@ -1,11 +1,14 @@
 import { Button, Input } from "@/components/ui";
 import styles from "./HomeHero.module.css";
+import { MapPin, Eye, Plus } from "lucide-react";
 
 export function HomeHero() {
   return (
     <section aria-labelledby="home-hero-title" className={styles.hero}>
       <div className={styles.badge} aria-label="Middleton High School">
-        <span aria-hidden="true">📍</span>
+        <span aria-hidden="true">
+          <MapPin />
+        </span>
         Middleton High School
       </div>
 
@@ -14,7 +17,7 @@ export function HomeHero() {
         <span className={styles.titleAccent}> Let&apos;s find it.</span>
       </h1>
 
-      <p className={styles.tagline}>Foundry is the future.</p>
+      {/* <p className={styles.tagline}>Foundry is the future.</p> */}
 
       <p className={styles.subtitle}>
         The easiest way to recover lost items at school. Search, report, and
@@ -37,7 +40,11 @@ export function HomeHero() {
         <form action="/search" className={styles.linkWrap}>
           <Button
             fullWidth
-            iconLeft={<span aria-hidden="true">👁️</span>}
+            iconLeft={
+              <span aria-hidden="true">
+                <Eye />
+              </span>
+            }
             size="lg"
             type="submit"
             variant="secondary"
@@ -48,7 +55,11 @@ export function HomeHero() {
         <form action="/submit" className={styles.linkWrap}>
           <Button
             fullWidth
-            iconLeft={<span aria-hidden="true">＋</span>}
+            iconLeft={
+              <span aria-hidden="true">
+                <Plus />
+              </span>
+            }
             size="lg"
             type="submit"
           >

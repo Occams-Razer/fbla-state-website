@@ -33,7 +33,9 @@ export function NavbarUserMenu() {
     return (
       <div className={styles.profileGroup}>
         <Link className={styles.profileBadge} href="/admin">
-          <span className={styles.profileIcon} aria-hidden="true">◈</span>
+          <span className={styles.profileIcon} aria-hidden="true">
+            ◈
+          </span>
           <span>{session.username}</span>
         </Link>
         <button className={styles.signOut} onClick={handleLogout} type="button">
@@ -45,12 +47,12 @@ export function NavbarUserMenu() {
 
   return (
     <div className={styles.profileGroup}>
-      <span className={styles.userTile}>
+      {/* <span className={styles.userTile}>
         <span className={styles.profileIcon} aria-hidden="true">○</span>
         <span>User</span>
-      </span>
+      </span> */}
       <Link className={styles.signIn} href="/login">
-        Sign in
+        Admin Log in
       </Link>
     </div>
   );

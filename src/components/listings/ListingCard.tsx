@@ -34,7 +34,11 @@ export function ListingCard({ item }: ListingCardProps) {
   const badgeVariant = STATUS_VARIANT[item.status] ?? "neutral";
 
   return (
-    <Link aria-label={`View details for ${item.title}`} className={styles.cardLink} href={`/items/${item.id}`}>
+    <Link
+      aria-label={`View details for ${item.title}`}
+      className={styles.cardLink}
+      href={`/items/${item.id}`}
+    >
       <Card className={styles.card}>
         <div className={styles.imageWrap}>
           {item.imageUrl ? (
@@ -52,15 +56,19 @@ export function ListingCard({ item }: ListingCardProps) {
         <div className={styles.content}>
           <div className={styles.titleRow}>
             <h3 className={styles.title}>{item.title}</h3>
-            <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
+            {/* <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge> */}
           </div>
 
-          <p className={styles.description}>{item.description || "No description provided."}</p>
+          <p className={styles.description}>
+            {item.description || "No description provided."}
+          </p>
 
           <dl className={styles.metaList}>
             <div className={styles.metaRow}>
               <dt className={styles.metaLabel}>Category</dt>
-              <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
+              <dd className={styles.metaValue}>
+                {item.category || "Uncategorized"}
+              </dd>
             </div>
             <div className={styles.metaRow}>
               <dt className={styles.metaLabel}>Location</dt>

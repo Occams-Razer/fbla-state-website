@@ -9,23 +9,28 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 console.log("FOOBAR SEEDING STARTED");
+declare const process: {
+  env: Record<string, string | undefined>;
+  exit(code?: number): never;
+};
 
-// if (!process.env.DATABASE_URL) {
-//   process.env.DATABASE_URL = "file:./dev.db";
-// }
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const rawPassword = "admin123";
+  const rawPassword = process.env.SEED_ADMIN_PASSWORD;
   if (!rawPassword || rawPassword.length < 8) {
     throw new Error(
       "Set SEED_ADMIN_PASSWORD in .env (min 8 characters) before running seed.",
     );
   }
 
-  const username = "admin";
+  const username =
+    (process.env.SEED_ADMIN_USERNAME ?? "admin").trim() || "admin";
   const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
   await prisma.admin.upsert({
@@ -45,7 +50,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error(e);
-    // process.exit(1);
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
