@@ -7,6 +7,7 @@ import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import process from "process";
 
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = "file:./dev.db";
@@ -23,7 +24,8 @@ async function main() {
     );
   }
 
-  const username = (process.env.SEED_ADMIN_USERNAME ?? "admin").trim() || "admin";
+  const username =
+    (process.env.SEED_ADMIN_USERNAME ?? "admin").trim() || "admin";
   const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
   await prisma.admin.upsert({
