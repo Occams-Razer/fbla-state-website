@@ -43,7 +43,7 @@ export function ListingCard({ item }: ListingCardProps) {
         <div className={styles.imageWrap}>
           {item.imageUrl ? (
             <img
-              alt={`Photo of ${item.title}`}
+              alt={item.title}
               className={styles.image}
               loading="lazy"
               src={item.imageUrl}

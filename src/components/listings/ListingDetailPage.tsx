@@ -280,7 +280,7 @@ export function ListingDetailPage() {
         <div className={styles.mediaWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            alt={`Photo of ${item.title}`}
+            alt={item.title}
             className={styles.image}
             src={item.imageUrl}
           />
@@ -324,6 +324,7 @@ export function ListingDetailPage() {
 
           <div className={styles.actionRow}>
             <Button
+              aria-label={`Claim ${item.title}`}
               disabled={!isClaimable}
               onClick={handleOpenClaimModal}
               size="lg"
@@ -420,6 +421,7 @@ export function ListingDetailPage() {
 
           <div className={styles.claimActions}>
             <Button
+              aria-label="Cancel claim form"
               disabled={isSubmittingClaim}
               onClick={handleCloseClaimModal}
               type="button"
@@ -427,7 +429,7 @@ export function ListingDetailPage() {
             >
               Cancel
             </Button>
-            <Button loading={isSubmittingClaim} type="submit">
+            <Button aria-label="Submit claim" loading={isSubmittingClaim} type="submit">
               Submit claim
             </Button>
           </div>
@@ -450,6 +452,7 @@ export function ListingDetailPage() {
           <div className={styles.claimIdBox}>
             <span className={styles.claimIdValue}>{submittedClaimId}</span>
             <button
+              aria-label="Copy claim ID"
               className={styles.claimIdCopy}
               onClick={() => {
                 if (submittedClaimId) {

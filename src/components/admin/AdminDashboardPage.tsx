@@ -695,7 +695,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
           <div className={styles.modalBody}>
             {viewItem.imageUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img alt={`Photo of ${viewItem.title}`} className={styles.modalImage} src={viewItem.imageUrl} />
+              <img alt={viewItem.title} className={styles.modalImage} src={viewItem.imageUrl} />
             ) : null}
             <dl className={styles.metaList}>
               <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{formatStatus(viewItem.status)}</span></dd></div>

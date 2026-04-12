@@ -171,6 +171,7 @@ export function SearchBrowsePage() {
       <Card className={styles.controlsCard} variant="outlined">
         <form className={styles.controlsForm} onSubmit={handleSubmit}>
           <Input
+            aria-label="Search listings"
             containerClassName={styles.searchField}
             label="Search listings"
             name="search"
@@ -184,6 +185,7 @@ export function SearchBrowsePage() {
               Category
             </label>
             <select
+              aria-label="Filter listings by category"
               className={styles.select}
               id="category-filter"
               name="category"
@@ -203,6 +205,7 @@ export function SearchBrowsePage() {
               Sort by date
             </label>
             <select
+              aria-label="Sort listings by date"
               className={styles.select}
               id="sort-filter"
               name="sort"
@@ -218,10 +221,10 @@ export function SearchBrowsePage() {
           </div>
 
           <div className={styles.actions}>
-            <Button loading={isSubmitting} size="md" type="submit">
+            <Button aria-label="Apply listing filters" loading={isSubmitting} size="md" type="submit">
               Apply
             </Button>
-            <Button onClick={clearFilters} size="md" type="button" variant="secondary">
+            <Button aria-label="Reset listing filters" onClick={clearFilters} size="md" type="button" variant="secondary">
               Reset
             </Button>
           </div>
