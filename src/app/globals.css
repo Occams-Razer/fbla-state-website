@@ -48,9 +48,9 @@
   --focus-outline: 2px solid rgba(239, 116, 0, 0.75);
 
   --font-sans:
-    "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Helvetica, Arial,
+    var(--font-metropolis), "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Helvetica, Arial,
     sans-serif;
-  --font-display: "Avenir Next", "Segoe UI", "Inter", sans-serif;
+  --font-display: var(--font-metropolis), "Avenir Next", "Segoe UI", "Inter", sans-serif;
 }
 
 [data-theme="dark"] {
@@ -94,6 +94,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: clip;
   padding: 0;
 }
 
@@ -101,10 +102,26 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-weight: 400;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+strong,
+b {
+  font-weight: 600;
 }
 
 a {

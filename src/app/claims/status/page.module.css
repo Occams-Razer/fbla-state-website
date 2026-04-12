@@ -2,7 +2,42 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  isolation: isolate;
   padding: var(--space-8) 0 var(--space-12);
+  position: relative;
+}
+
+.page::before,
+.page::after {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  opacity: 0.33;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.page::before {
+  background-image: url("/shapes/purpleStar.svg");
+  right: -4.5rem;
+  top: -2.5rem;
+  width: clamp(7rem, 16vw, 11rem);
+  height: clamp(7rem, 16vw, 11rem);
+}
+
+.page::after {
+  background-image: url("/shapes/pinkRectangle.svg");
+  bottom: 2.2rem;
+  left: -2.2rem;
+  width: clamp(5rem, 9vw, 8rem);
+  height: clamp(5rem, 8vw, 7rem);
+}
+
+.page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .header {
@@ -233,6 +268,11 @@
 }
 
 @media (max-width: 620px) {
+  .page::before,
+  .page::after {
+    display: none;
+  }
+
   .page {
     padding-top: var(--space-6);
   }

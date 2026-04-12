@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { adminItemsQuerySchema, formatZodError } from "@/lib/schemas";

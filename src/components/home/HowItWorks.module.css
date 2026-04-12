@@ -3,10 +3,40 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  isolation: isolate;
   margin: 0 auto;
   max-width: 68rem;
   padding: var(--space-12) 0;
+  position: relative;
   text-align: center;
+}
+
+.section::before,
+.section::after {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  opacity: 0.45;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.section::before {
+  background-image: url("/shapes/greenTriangle.svg");
+  height: clamp(4.5rem, 10vw, 7rem);
+  right: -1.8rem;
+  top: 1.5rem;
+  width: clamp(4.5rem, 10vw, 7rem);
+}
+
+.section::after {
+  background-image: url("/shapes/yellowCircle.svg");
+  bottom: 1rem;
+  height: clamp(3rem, 6vw, 4.5rem);
+  left: -1.2rem;
+  width: clamp(3rem, 6vw, 4.5rem);
 }
 
 .title {
@@ -29,6 +59,13 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: var(--space-4);
   width: 100%;
+}
+
+.title,
+.subtitle,
+.grid {
+  position: relative;
+  z-index: 1;
 }
 
 .card {
@@ -70,5 +107,12 @@
 
   .card {
     min-height: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .section::before,
+  .section::after {
+    display: none;
   }
 }
