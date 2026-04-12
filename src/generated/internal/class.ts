@@ -17,7 +17,7 @@ import type * as Prisma from "./prismaNamespace"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.6.0",
+  "clientVersion": "7.7.0",
   "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
   "activeProvider": "sqlite",
   "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n}\n\nmodel Admin {\n  id       String @id @default(cuid())\n  username String @unique\n  password String\n}\n\nmodel Item {\n  id          String   @id @default(cuid())\n  title       String\n  description String\n  category    String\n  location    String\n  dateFound   String\n  imageUrl    String\n  status      String   @default(\"PENDING\")\n  createdAt   DateTime @default(now())\n  isDeleted   Boolean  @default(false)\n\n  claims Claim[]\n}\n\nmodel Claim {\n  id               String   @id @default(cuid())\n  itemId           String\n  name             String\n  email            String\n  proofOfOwnership String\n  locationLost     String\n  status           String   @default(\"PENDING\")\n  createdAt        DateTime @default(now())\n  isDeleted        Boolean  @default(false)\n\n  item Item @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)\n}\n",

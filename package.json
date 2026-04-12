@@ -7,39 +7,40 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "tsx seed.ts"
+    "db:push": "prisma db push",
+    "db:seed": "prisma db execute --file prisma/seed.sql",
+    "db:sync": "npm run db:push && npm run db:seed"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^9.0.0",
     "@mui/material-nextjs": "^9.0.0",
+    "@mui/styles": "^6.5.0",
     "@prisma/adapter-better-sqlite3": "^7.7.0",
-    "@prisma/client": "^7.6.0",
+    "@prisma/client": "^7.7.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.8.0",
+    "dotenv": "^17.4.1",
     "framer-motion": "^12.38.0",
+    "i": "^0.3.7",
     "jose": "^6.2.2",
+    "lucide-react": "^1.8.0",
     "next": "^16.2.2",
     "nodemailer": "^8.0.5",
+    "npm": "^11.12.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "sqlite": "^5.1.1",
-    "sqlite3": "^6.0.1",
-    "zod": "^4.3.6"
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^20",
+    "@types/node": "^20.19.39",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
-    "prisma": "^7.6.0",
-    "tsx": "^4.21.0",
+    "prisma": "^7.7.0",
     "typescript": "^5"
   },
   "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
@@ -51,8 +52,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Occams-Razer/fbla-state-website/issues"
   },
-  "homepage": "https://github.com/Occams-Razer/fbla-state-website#readme"
+  "homepage": "https://github.com/Occams-Razer/fbla-state-website#readme",
+  "prisma": {
+    "seed": "prisma db execute --file prisma/seed.sql"
+  }
 }

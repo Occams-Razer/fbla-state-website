@@ -1,24 +1,27 @@
 import { Card } from "@/components/ui";
 import styles from "./HowItWorks.module.css";
+import { Check, Plus, Search } from "lucide-react";
 
 const STEPS = [
   {
     id: "search",
-    icon: "🔎",
+    icon: <Search />,
     title: "Search & Find",
     description: "Browse all found items with search and category filters.",
   },
   {
     id: "report",
-    icon: "＋",
+    icon: <Plus />,
     title: "Report Items",
-    description: "Found something? Submit it in seconds with a photo and details.",
+    description:
+      "Found something? Submit it in seconds with a photo and details.",
   },
   {
     id: "claim",
-    icon: "✓",
+    icon: <Check />,
     title: "Verified Claims",
-    description: "Admin moderation ensures only rightful owners get items back.",
+    description:
+      "Admin moderation ensures only rightful owners get items back.",
   },
 ];
 
@@ -28,7 +31,9 @@ export function HowItWorks() {
       <h2 id="how-it-works-title" className={styles.title}>
         How it works
       </h2>
-      <p className={styles.subtitle}>Three simple steps to reunite with your stuff</p>
+      <p className={styles.subtitle}>
+        Three simple steps to reunite with your stuff
+      </p>
 
       <div className={styles.grid}>
         {STEPS.map((step) => (

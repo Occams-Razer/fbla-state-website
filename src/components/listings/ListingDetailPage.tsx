@@ -1,7 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import { Badge, Button, Card, Input, Modal } from "@/components/ui";
 import type { BadgeVariant } from "@/components/ui/Badge";
 import { createClaim, fetchItemById } from "@/lib/api";
@@ -97,8 +100,10 @@ export function ListingDetailPage() {
   const [formValues, setFormValues] = useState<ClaimFormState>(INITIAL_FORM);
   const [formErrors, setFormErrors] = useState<ClaimFormErrors>({});
   const [claimSubmitError, setClaimSubmitError] = useState<string | null>(null);
-  const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+  const [claimSnackbarOpen, setClaimSnackbarOpen] = useState(false);
+  const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
+  const [copiedClaimId, setCopiedClaimId] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -125,14 +130,18 @@ export function ListingDetailPage() {
 
         if (isApiError(error)) {
           if (error.status === 404) {
-            setLoadError("This listing was not found or may have been removed.");
+            setLoadError(
+              "This listing was not found or may have been removed.",
+            );
           } else {
             setLoadError(error.message);
           }
           return;
         }
 
-        setLoadError("We could not load this listing right now. Please try again.");
+        setLoadError(
+          "We could not load this listing right now. Please try again.",
+        );
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -150,7 +159,6 @@ export function ListingDetailPage() {
   function handleOpenClaimModal() {
     setFormErrors({});
     setClaimSubmitError(null);
-    setClaimSuccessMessage(null);
     setIsClaimModalOpen(true);
   }
 
@@ -186,7 +194,6 @@ export function ListingDetailPage() {
     const nextErrors = validateClaimForm(formValues);
     setFormErrors(nextErrors);
     setClaimSubmitError(null);
-    setClaimSuccessMessage(null);
 
     if (Object.keys(nextErrors).length > 0) {
       return;
@@ -202,15 +209,18 @@ export function ListingDetailPage() {
 
     try {
       setIsSubmittingClaim(true);
-      await createClaim(payload);
-      setClaimSuccessMessage("Claim submitted successfully. An admin will review it soon.");
+      const result = await createClaim(payload);
       setFormValues(INITIAL_FORM);
       setFormErrors({});
+      setIsClaimModalOpen(false);
+      setSubmittedClaimId(result.id);
     } catch (error) {
       if (isApiError(error)) {
         setClaimSubmitError(error.message);
       } else {
-        setClaimSubmitError("We could not submit your claim. Please try again.");
+        setClaimSubmitError(
+          "We could not submit your claim. Please try again.",
+        );
       }
     } finally {
       setIsSubmittingClaim(false);
@@ -222,7 +232,9 @@ export function ListingDetailPage() {
       <section aria-busy="true" aria-live="polite" className={styles.page}>
         <Card className={styles.stateCard} variant="muted">
           <h1 className={styles.stateTitle}>Loading listing...</h1>
-          <p className={styles.stateText}>Please wait while we fetch the item details.</p>
+          <p className={styles.stateText}>
+            Please wait while we fetch the item details.
+          </p>
         </Card>
       </section>
     );
@@ -233,9 +245,14 @@ export function ListingDetailPage() {
       <section className={styles.page}>
         <Card className={styles.stateCard} role="alert" variant="muted">
           <h1 className={styles.stateTitle}>Unable to load listing</h1>
-          <p className={styles.stateText}>{loadError ?? "Listing not found."}</p>
+          <p className={styles.stateText}>
+            {loadError ?? "Listing not found."}
+          </p>
           <div className={styles.stateActions}>
-            <Button onClick={() => setRetryCount((count) => count + 1)} variant="secondary">
+            <Button
+              onClick={() => setRetryCount((count) => count + 1)}
+              variant="secondary"
+            >
               Try again
             </Button>
             <Button onClick={() => router.push("/search")} variant="ghost">
@@ -250,11 +267,16 @@ export function ListingDetailPage() {
   const displayDate = item.dateFound || item.createdAt;
   const isClaimable = item.status === "APPROVED";
   const badgeVariant = STATUS_VARIANT[item.status] ?? "neutral";
-  const proofErrorId = formErrors.proofOfOwnership ? "proof-of-ownership-error" : undefined;
+  const proofErrorId = formErrors.proofOfOwnership
+    ? "proof-of-ownership-error"
+    : undefined;
 
   return (
     <div className={styles.page}>
-      <section aria-labelledby="listing-detail-title" className={styles.detailLayout}>
+      <section
+        aria-labelledby="listing-detail-title"
+        className={styles.detailLayout}
+      >
         <div className={styles.mediaWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -269,21 +291,26 @@ export function ListingDetailPage() {
             <h1 className={styles.title} id="listing-detail-title">
               {item.title}
             </h1>
-            <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
+            {/* <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge> */}
           </div>
 
           <p className={styles.description}>
-            {item.description || "No additional description was provided for this item."}
+            {item.description ||
+              "No additional description was provided for this item."}
           </p>
 
           <dl className={styles.metaList}>
             <div className={styles.metaRow}>
               <dt className={styles.metaLabel}>Category</dt>
-              <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
+              <dd className={styles.metaValue}>
+                {item.category || "Uncategorized"}
+              </dd>
             </div>
             <div className={styles.metaRow}>
               <dt className={styles.metaLabel}>Found at</dt>
-              <dd className={styles.metaValue}>{item.location || "Unknown location"}</dd>
+              <dd className={styles.metaValue}>
+                {item.location || "Unknown location"}
+              </dd>
             </div>
             <div className={styles.metaRow}>
               <dt className={styles.metaLabel}>Date found</dt>
@@ -305,7 +332,8 @@ export function ListingDetailPage() {
             </Button>
             {!isClaimable ? (
               <p className={styles.actionHint}>
-                This item is currently {item.status.toLowerCase()} and cannot be claimed.
+                This item is currently {item.status.toLowerCase()} and cannot be
+                claimed.
               </p>
             ) : null}
           </div>
@@ -318,7 +346,11 @@ export function ListingDetailPage() {
         onClose={handleCloseClaimModal}
         title="Submit a claim"
       >
-        <form className={styles.claimForm} noValidate onSubmit={handleClaimSubmit}>
+        <form
+          className={styles.claimForm}
+          noValidate
+          onSubmit={handleClaimSubmit}
+        >
           <Input
             autoComplete="name"
             error={formErrors.name}
@@ -342,13 +374,18 @@ export function ListingDetailPage() {
             error={formErrors.locationLost}
             hint="Example: Gym locker room, cafeteria table, room 204."
             label="Where did you lose it?"
-            onChange={(event) => updateFormValue("locationLost", event.target.value)}
+            onChange={(event) =>
+              updateFormValue("locationLost", event.target.value)
+            }
             required
             value={formValues.locationLost}
           />
 
           <div className={styles.textareaField}>
-            <label className={styles.textareaLabel} htmlFor="proof-of-ownership">
+            <label
+              className={styles.textareaLabel}
+              htmlFor="proof-of-ownership"
+            >
               Proof of ownership <span className={styles.required}>*</span>
             </label>
             <textarea
@@ -356,14 +393,20 @@ export function ListingDetailPage() {
               aria-invalid={formErrors.proofOfOwnership ? true : undefined}
               className={styles.textarea}
               id="proof-of-ownership"
-              onChange={(event) => updateFormValue("proofOfOwnership", event.target.value)}
+              onChange={(event) =>
+                updateFormValue("proofOfOwnership", event.target.value)
+              }
               placeholder="Describe unique details (brand, color, stickers, lock screen, etc.)"
               required
               rows={5}
               value={formValues.proofOfOwnership}
             />
             {formErrors.proofOfOwnership ? (
-              <p className={styles.textareaError} id={proofErrorId} role="alert">
+              <p
+                className={styles.textareaError}
+                id={proofErrorId}
+                role="alert"
+              >
                 {formErrors.proofOfOwnership}
               </p>
             ) : null}
@@ -372,12 +415,6 @@ export function ListingDetailPage() {
           {claimSubmitError ? (
             <p className={styles.submitError} role="alert">
               {claimSubmitError}
-            </p>
-          ) : null}
-
-          {claimSuccessMessage ? (
-            <p className={styles.submitSuccess} role="status">
-              {claimSuccessMessage}
             </p>
           ) : null}
 
@@ -396,6 +433,69 @@ export function ListingDetailPage() {
           </div>
         </form>
       </Modal>
+
+      <Modal
+        isOpen={submittedClaimId !== null}
+        onClose={() => {
+          setSubmittedClaimId(null);
+          setCopiedClaimId(false);
+        }}
+        title="Claim submitted!"
+      >
+        <div className={styles.claimSuccessBody}>
+          <p className={styles.claimSuccessText}>
+            Your claim has been received. Save your Claim ID — you will need it
+            along with your email to track your claim status.
+          </p>
+          <div className={styles.claimIdBox}>
+            <span className={styles.claimIdValue}>{submittedClaimId}</span>
+            <button
+              className={styles.claimIdCopy}
+              onClick={() => {
+                if (submittedClaimId) {
+                  void navigator.clipboard.writeText(submittedClaimId);
+                  setCopiedClaimId(true);
+                  setTimeout(() => setCopiedClaimId(false), 2000);
+                }
+              }}
+              type="button"
+            >
+              {copiedClaimId ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <div className={styles.claimSuccessActions}>
+            <Link
+              className={styles.claimTrackLink}
+              href={`/claims/status?claimId=${submittedClaimId ?? ""}`}
+            >
+              Track claim status →
+            </Link>
+            <Button
+              onClick={() => {
+                setSubmittedClaimId(null);
+                setCopiedClaimId(false);
+              }}
+              variant="secondary"
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Snackbar
+        autoHideDuration={4000}
+        onClose={() => setClaimSnackbarOpen(false)}
+        open={claimSnackbarOpen}
+      >
+        <Alert
+          onClose={() => setClaimSnackbarOpen(false)}
+          severity="success"
+          sx={{ borderRadius: 2, width: "100%" }}
+        >
+          Claim submitted successfully. An admin will review it soon.
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

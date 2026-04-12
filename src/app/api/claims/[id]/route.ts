@@ -2,18 +2,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth";
 import { claimPatchSchema, formatZodError } from "@/lib/schemas";
-import { sendClaimApprovedEmail } from "@/lib/email";
+import { sendClaimApprovedEmail, sendClaimPickedUpEmail } from "@/lib/email";
 
 async function syncItemClaimState(itemId: string) {
-  const approvedClaims = await prisma.claim.count({
+  const activeClaimedStates = await prisma.claim.count({
     where: {
       itemId,
-      status: "APPROVED",
+      status: { in: ["APPROVED", "PICKED_UP"] },
       isDeleted: false,
     },
   });
 
-  if (approvedClaims > 0) {
+  if (activeClaimedStates > 0) {
     await prisma.item.update({
       where: { id: itemId },
       data: { status: "CLAIMED" },
@@ -74,9 +74,31 @@ export async function PATCH(
       );
     }
 
-    await prisma.claim.update({
-      where: { id },
-      data: { status: parsed.data.status },
+    if (parsed.data.status === "PICKED_UP" && existingClaim.status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Only approved claims can be marked as picked up." },
+        { status: 409 },
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.claim.update({
+        where: { id },
+        data: { status: parsed.data.status },
+      });
+
+      // Keep ownership resolution consistent: only one non-deleted approved claim per item.
+      if (parsed.data.status === "APPROVED") {
+        await tx.claim.updateMany({
+          where: {
+            itemId: existingClaim.itemId,
+            id: { not: id },
+            isDeleted: false,
+            status: { in: ["PENDING", "APPROVED"] },
+          },
+          data: { status: "REJECTED" },
+        });
+      }
     });
 
     await syncItemClaimState(existingClaim.itemId);
@@ -92,6 +114,17 @@ export async function PATCH(
 
     if (parsed.data.status === "APPROVED" && hydratedClaim.item) {
       void sendClaimApprovedEmail(
+        { id: hydratedClaim.id, name: hydratedClaim.name, email: hydratedClaim.email },
+        {
+          title: hydratedClaim.item.title,
+          category: hydratedClaim.item.category,
+          location: hydratedClaim.item.location,
+        },
+      );
+    }
+
+    if (parsed.data.status === "PICKED_UP" && hydratedClaim.item) {
+      void sendClaimPickedUpEmail(
         { id: hydratedClaim.id, name: hydratedClaim.name, email: hydratedClaim.email },
         {
           title: hydratedClaim.item.title,

@@ -1,0 +1,244 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 40rem;
+}
+
+/* Two-column layout */
+.layout {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+/* Form card */
+.formCard {
+  position: sticky;
+  top: calc(76px + var(--space-4));
+}
+
+.formTitle {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.errorText {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Result card */
+.resultCard {
+  min-height: 16rem;
+}
+
+.resultWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Status banner */
+.statusBanner {
+  align-items: center;
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.banner_PENDING {
+  background: color-mix(in srgb, orange 12%, transparent);
+  border: 1px solid color-mix(in srgb, orange 28%, transparent);
+}
+
+.banner_APPROVED {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+}
+
+.banner_REJECTED {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, transparent);
+}
+
+.statusIcon {
+  flex-shrink: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.statusBannerLabel {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.statusBannerValue {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0.15rem 0 0;
+}
+
+.banner_PENDING .statusBannerValue {
+  color: color-mix(in srgb, orange 80%, black);
+}
+
+.banner_APPROVED .statusBannerValue {
+  color: color-mix(in srgb, var(--color-success) 80%, black);
+}
+
+.banner_REJECTED .statusBannerValue {
+  color: var(--color-danger);
+}
+
+/* Meta list */
+.metaList {
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-top: var(--space-4);
+}
+
+.metaRow {
+  column-gap: var(--space-3);
+  display: grid;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+}
+
+.metaRow dt {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  padding-top: 0.1em;
+}
+
+.metaRow dd {
+  font-weight: 600;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.monoValue {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 600 !important;
+}
+
+/* Status note */
+.statusNote {
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.notePending {
+  background: color-mix(in srgb, orange 8%, transparent);
+  border: 1px solid color-mix(in srgb, orange 22%, transparent);
+  color: color-mix(in srgb, orange 70%, black);
+}
+
+.noteApproved {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  color: color-mix(in srgb, var(--color-success) 75%, black);
+}
+
+.noteRejected {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  color: var(--color-danger);
+}
+
+/* Empty state */
+.emptyPanel {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--color-text-muted);
+  font-size: 2.4rem;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.emptyText {
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 24rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 820px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .formCard {
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  .page {
+    padding-top: var(--space-6);
+  }
+
+  .metaRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}

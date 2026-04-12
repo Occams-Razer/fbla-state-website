@@ -11,6 +11,7 @@ export function Footer() {
             className={styles.brandLogo}
             height={44}
             src="/logo.svg"
+            style={{ height: "auto" }}
             width={48}
           />
           <span>FOUNDRY</span>

@@ -37,7 +37,7 @@ const ITEMS = [
     status: "APPROVED",
   },
   {
-    title: "HP Laptop 15\" (Silver)",
+    title: 'HP Laptop 15" (Silver)',
     description:
       "Silver HP 15-inch laptop with a blue-and-white wave sticker on the lid. No power adapter. Small dent on the bottom-left corner. Left in room 204 after 3rd period.",
     category: "Electronics",

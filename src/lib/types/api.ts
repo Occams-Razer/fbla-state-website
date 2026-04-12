@@ -73,3 +73,14 @@ export interface ClaimsListResponse {
   pageSize: number;
   totalPages: number;
 }
+
+export interface ClaimStatusLookupResponse {
+  claimId: string;
+  status: ClaimStatus;
+  createdAt: string;
+  item: {
+    id: string;
+    title: string;
+    itemStatus: ItemStatus;
+  } | null;
+}

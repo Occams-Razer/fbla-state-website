@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { Button, Card, Modal } from "@/components/ui";
-import { fetchAdminItems, fetchClaims, fetchItemById, updateClaimStatus, updateItemStatus } from "@/lib/api";
+import {
+  clearClaimsByStatus,
+  fetchAdminItemById,
+  clearItemsByStatus,
+  fetchAdminItems,
+  fetchClaims,
+  updateClaimStatus,
+  updateItemStatus,
+} from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
 
 type MainTab = "items" | "claims";
 type ItemSubTab = "PENDING" | "APPROVED" | "REJECTED";
-type ClaimSubTab = "PENDING" | "APPROVED" | "REJECTED";
+type ClaimSubTab = "PENDING" | "APPROVED" | "REJECTED" | "PICKED_UP";
 
 function formatDate(value: string) {
   const parsedDate = new Date(value);
@@ -28,8 +36,20 @@ function statusTagClass(status: string): string {
   switch (status) {
     case "APPROVED": return styles.tagApproved;
     case "REJECTED": return styles.tagRejected;
+    case "PICKED_UP": return styles.tagClaimed;
     case "CLAIMED":  return styles.tagClaimed;
     default:         return styles.tagPending;
+  }
+}
+
+function formatStatus(status: string): string {
+  switch (status) {
+    case "PENDING":   return "Pending";
+    case "APPROVED":  return "Approved";
+    case "REJECTED":  return "Rejected";
+    case "CLAIMED":   return "Claimed";
+    case "PICKED_UP": return "Picked Up";
+    default:          return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   }
 }
 
@@ -62,10 +82,30 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
   const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
+  const [clearingKey, setClearingKey] = useState<string | null>(null);
 
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
   const [viewItemLoading, setViewItemLoading] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [statsNoticePulse, setStatsNoticePulse] = useState(false);
+
+  function markStatsUpdated() {
+    setLastUpdatedAt(new Date());
+    setStatsNoticePulse(true);
+  }
+
+  useEffect(() => {
+    if (!statsNoticePulse) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setStatsNoticePulse(false);
+    }, 1300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [statsNoticePulse]);
 
   useEffect(() => {
     let ignore = false;
@@ -75,7 +115,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
       setItemsError(null);
       try {
         const results = await fetchAdminItems();
-        if (!ignore) setItems(results.items);
+        if (!ignore) {
+          setItems(results.items);
+          markStatsUpdated();
+        }
       } catch (error) {
         if (ignore) return;
         setItemsError(isApiError(error) ? error.message : "Could not load moderation items.");
@@ -89,7 +132,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
       setClaimsError(null);
       try {
         const results = await fetchClaims();
-        if (!ignore) setClaims(results.claims);
+        if (!ignore) {
+          setClaims(results.claims);
+          markStatsUpdated();
+        }
       } catch (error) {
         if (ignore) return;
         setClaimsError(isApiError(error) ? error.message : "Could not load claims.");
@@ -110,6 +156,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
       const updated = await updateItemStatus(item.id, { status: nextStatus });
       setItems((prev) => prev.map((e) => (e.id === item.id ? updated : e)));
       setSnackbar({ message: `Item "${item.title}" marked ${nextStatus.toLowerCase()}.`, severity: "success" });
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({ message: isApiError(error) ? error.message : "Could not update item status.", severity: "error" });
     } finally {
@@ -127,7 +174,13 @@ export function AdminDashboardPage({ username }: { username: string }) {
           e.id === claim.id ? { ...e, ...updated, item: updated.item ?? e.item } : e,
         ),
       );
+      if (updated.item?.id) {
+        setItems((prev) =>
+          prev.map((item) => (item.id === updated.item!.id ? { ...item, ...updated.item } : item)),
+        );
+      }
       setSnackbar({ message: `Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`, severity: "success" });
+      markStatsUpdated();
     } catch (error) {
       setSnackbar({ message: isApiError(error) ? error.message : "Could not update claim status.", severity: "error" });
     } finally {
@@ -140,7 +193,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
     setViewItem(null);
     setViewItemLoading(true);
     try {
-      const item = await fetchItemById(id);
+      const item = await fetchAdminItemById(id);
       setViewItem(item);
     } catch {
       // item stays null — modal shows error state
@@ -154,8 +207,88 @@ export function AdminDashboardPage({ username }: { username: string }) {
     setViewItem(null);
   }
 
+  function handleCardKeyDown(event: ReactKeyboardEvent<HTMLElement>, onActivate: () => void) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
+  }
+
+  function openItemsSubTab(status: ItemSubTab) {
+    setMainTab("items");
+    setItemSubTab(status);
+  }
+
+  function openClaimsSubTab(status: ClaimSubTab) {
+    setMainTab("claims");
+    setClaimSubTab(status);
+  }
+
+  async function handleClearItems(status: "APPROVED" | "REJECTED") {
+    const totalForStatus = items.filter((item) => item.status === status).length;
+    if (totalForStatus === 0) {
+      return;
+    }
+
+    const key = `clear:items:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearItemsByStatus(status);
+      setItems((previous) => previous.filter((item) => item.status !== status));
+      setSnackbar({
+        message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
+        severity: "success",
+      });
+      markStatsUpdated();
+    } catch (error) {
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not clear items.",
+        severity: "error",
+      });
+    } finally {
+      setClearingKey(null);
+    }
+  }
+
+  async function handleClearClaims(status: "APPROVED" | "REJECTED" | "PICKED_UP") {
+    const totalForStatus = claims.filter((claim) => claim.status === status).length;
+    if (totalForStatus === 0) {
+      return;
+    }
+
+    const key = `clear:claims:${status}`;
+    setClearingKey(key);
+    try {
+      const { cleared } = await clearClaimsByStatus(status);
+      setClaims((previous) => previous.filter((claim) => claim.status !== status));
+      setSnackbar({
+        message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
+        severity: "success",
+      });
+      markStatsUpdated();
+    } catch (error) {
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not clear claims.",
+        severity: "error",
+      });
+    } finally {
+      setClearingKey(null);
+    }
+  }
+
   const visibleItems  = items.filter((i) => i.status === itemSubTab);
   const visibleClaims = claims.filter((c) => c.status === claimSubTab);
+  const pendingSubmitsCount = items.filter((item) => item.status === "PENDING").length;
+  const pendingClaimsCount = claims.filter((claim) => claim.status === "PENDING").length;
+  const searchVisibleItemsCount = items.filter((item) => item.status === "APPROVED").length;
+  const claimedItemsCount = items.filter((item) => item.status === "CLAIMED").length;
+  const lastUpdatedLabel = lastUpdatedAt
+    ? new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      }).format(lastUpdatedAt)
+    : "Not synced yet";
 
   return (
     <div className={styles.page}>
@@ -165,6 +298,53 @@ export function AdminDashboardPage({ username }: { username: string }) {
         <p className={styles.subtitle}>
           Signed in as <strong>{username}</strong>. Moderate item listings and resolve claim requests.
         </p>
+      </section>
+
+      <section aria-label="Quick stats" className={styles.quickStatsSection}>
+        <div className={styles.quickStatsHeader}>
+          <h2 className={styles.quickStatsTitle}>Quick Stats</h2>
+          <p
+            className={`${styles.quickStatsNotice} ${statsNoticePulse ? styles.quickStatsNoticePulse : ""}`}
+            role="status"
+          >
+            <span aria-hidden="true" className={styles.quickStatsDot} />
+            <span className={styles.quickStatsTime}>Updated {lastUpdatedLabel}</span>
+          </p>
+        </div>
+        <div className={styles.quickStatsGrid}>
+          <button
+            className={`${styles.quickStatTile} ${styles.quickStatPending} ${styles.quickStatButton}`}
+            onClick={() => openItemsSubTab("PENDING")}
+            type="button"
+          >
+            <p className={styles.quickStatLabel}>Submits Waiting for Review</p>
+            <p className={styles.quickStatValue}>{pendingSubmitsCount}</p>
+          </button>
+          <button
+            className={`${styles.quickStatTile} ${styles.quickStatClaims} ${styles.quickStatButton}`}
+            onClick={() => openClaimsSubTab("PENDING")}
+            type="button"
+          >
+            <p className={styles.quickStatLabel}>Claims Waiting for Review</p>
+            <p className={styles.quickStatValue}>{pendingClaimsCount}</p>
+          </button>
+          <button
+            className={`${styles.quickStatTile} ${styles.quickStatItems} ${styles.quickStatButton}`}
+            onClick={() => openItemsSubTab("APPROVED")}
+            type="button"
+          >
+            <p className={styles.quickStatLabel}>Total Items on Search Page</p>
+            <p className={styles.quickStatValue}>{searchVisibleItemsCount}</p>
+          </button>
+          <button
+            className={`${styles.quickStatTile} ${styles.quickStatApproved} ${styles.quickStatButton}`}
+            onClick={() => openClaimsSubTab("APPROVED")}
+            type="button"
+          >
+            <p className={styles.quickStatLabel}>Items Approved to Claimed</p>
+            <p className={styles.quickStatValue}>{claimedItemsCount}</p>
+          </button>
+        </div>
       </section>
 
       {/* Main tabs */}
@@ -187,26 +367,40 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
-            {([
-              { key: "PENDING",  label: "Submitted", cls: "" },
-              { key: "APPROVED", label: "Approved",  cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected",  cls: styles.subTabRejected },
-            ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={itemSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setItemSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabHeader}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
+              {([
+                { key: "PENDING", label: "Submitted", cls: "" },
+                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+              ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={itemSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setItemSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {items.filter((i) => i.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {itemSubTab === "APPROVED" || itemSubTab === "REJECTED" ? (
+              <Button
+                disabled={items.filter((item) => item.status === itemSubTab).length === 0}
+                loading={clearingKey === `clear:items:${itemSubTab}`}
+                onClick={() => handleClearItems(itemSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {items.filter((i) => i.status === key).length}
-                </span>
-              </button>
-            ))}
+                {itemSubTab === "APPROVED" ? "Clear Approved" : "Clear Rejected"}
+              </Button>
+            ) : null}
           </div>
 
           {/* Loading skeletons */}
@@ -237,13 +431,19 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   const approveKey = `item:${item.id}:APPROVED`;
                   const rejectKey  = `item:${item.id}:REJECTED`;
                   return (
-                    <Card key={item.id} className={styles.entryCard}>
+                    <Card
+                      aria-label={`View details for ${item.title}`}
+                      className={`${styles.entryCard} ${styles.entryCardClickable}`}
+                      key={item.id}
+                      onClick={() => void handleViewItem(item.id)}
+                      onKeyDown={(event) => handleCardKeyDown(event, () => void handleViewItem(item.id))}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <div className={styles.entryHeader}>
-                        <button className={styles.entryTitleLink} onClick={() => handleViewItem(item.id)} type="button">
-                          <h2 className={styles.entryTitle}>{item.title}</h2>
-                        </button>
+                        <h2 className={styles.entryTitle}>{item.title}</h2>
                         <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
-                          {item.status}
+                          {formatStatus(item.status)}
                         </span>
                       </div>
                       <dl className={styles.metaList}>
@@ -258,7 +458,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === rejectKey || item.status === "APPROVED"}
                               loading={activeActionKey === approveKey}
-                              onClick={() => handleItemStatusChange(item, "APPROVED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleItemStatusChange(item, "APPROVED");
+                              }}
                               size="sm"
                               variant="success"
                             >
@@ -271,7 +474,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             <Button
                               disabled={activeActionKey === approveKey || item.status === "REJECTED"}
                               loading={activeActionKey === rejectKey}
-                              onClick={() => handleItemStatusChange(item, "REJECTED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleItemStatusChange(item, "REJECTED");
+                              }}
                               size="sm"
                               variant="danger"
                             >
@@ -293,26 +499,45 @@ export function AdminDashboardPage({ username }: { username: string }) {
       <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
         <section className={styles.section} role="tabpanel">
           {/* Sub-tabs */}
-          <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
-            {([
-              { key: "PENDING",  label: "Pending",  cls: "" },
-              { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-              { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-            ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-              <button
-                key={key}
-                aria-selected={claimSubTab === key}
-                className={`${styles.subTabButton} ${cls}`}
-                onClick={() => setClaimSubTab(key)}
-                role="tab"
-                type="button"
+          <div className={styles.subTabHeader}>
+            <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
+              {([
+                { key: "PENDING", label: "Pending", cls: "" },
+                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
+                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
+                { key: "PICKED_UP", label: "Picked Up", cls: styles.subTabClaimed },
+              ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  aria-selected={claimSubTab === key}
+                  className={`${styles.subTabButton} ${cls}`}
+                  onClick={() => setClaimSubTab(key)}
+                  role="tab"
+                  type="button"
+                >
+                  {label}
+                  <span className={styles.subTabCount}>
+                    {claims.filter((c) => c.status === key).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {claimSubTab === "APPROVED" || claimSubTab === "REJECTED" || claimSubTab === "PICKED_UP" ? (
+              <Button
+                disabled={claims.filter((claim) => claim.status === claimSubTab).length === 0}
+                loading={clearingKey === `clear:claims:${claimSubTab}`}
+                onClick={() => handleClearClaims(claimSubTab)}
+                size="sm"
+                variant="danger"
               >
-                {label}
-                <span className={styles.subTabCount}>
-                  {claims.filter((c) => c.status === key).length}
-                </span>
-              </button>
-            ))}
+                {claimSubTab === "APPROVED"
+                  ? "Clear Approved"
+                  : claimSubTab === "REJECTED"
+                    ? "Clear Rejected"
+                    : "Clear Picked Up"}
+              </Button>
+            ) : null}
           </div>
 
           {isLoadingClaims ? (
@@ -341,19 +566,37 @@ export function AdminDashboardPage({ username }: { username: string }) {
                 {visibleClaims.map((claim) => {
                   const approveKey = `claim:${claim.id}:APPROVED`;
                   const rejectKey  = `claim:${claim.id}:REJECTED`;
+                  const pickedUpKey = `claim:${claim.id}:PICKED_UP`;
+                  const claimItemId = claim.item?.id;
+                  const isClaimCardClickable = Boolean(claimItemId);
                   return (
-                    <Card key={claim.id} className={styles.entryCard}>
+                    <Card
+                      aria-label={
+                        isClaimCardClickable
+                          ? `View item details for claim by ${claim.name}`
+                          : `Claim details for ${claim.name}`
+                      }
+                      className={`${styles.entryCard} ${isClaimCardClickable ? styles.entryCardClickable : ""}`}
+                      key={claim.id}
+                      onClick={isClaimCardClickable ? () => void handleViewItem(claimItemId as string) : undefined}
+                      onKeyDown={
+                        isClaimCardClickable
+                          ? (event) =>
+                              handleCardKeyDown(event, () => void handleViewItem(claimItemId as string))
+                          : undefined
+                      }
+                      role={isClaimCardClickable ? "button" : undefined}
+                      tabIndex={isClaimCardClickable ? 0 : undefined}
+                    >
                       <div className={styles.entryHeader}>
                         <div>
                           <h2 className={styles.entryTitle}>{claim.name}</h2>
                           {claim.item?.id ? (
-                            <button className={styles.claimItemLink} onClick={() => handleViewItem(claim.item!.id)} type="button">
-                              {claim.item.title ?? "View item"} →
-                            </button>
+                            <p className={styles.claimItemLabel}>{claim.item.title ?? "Linked item"}</p>
                           ) : null}
                         </div>
                         <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
-                          {claim.status}
+                          {formatStatus(claim.status)}
                         </span>
                       </div>
                       <dl className={styles.metaList}>
@@ -366,9 +609,17 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <Tooltip title="Approve this claim and notify the claimant" arrow>
                           <span>
                             <Button
-                              disabled={activeActionKey === rejectKey || claim.status === "APPROVED"}
+                              disabled={
+                                activeActionKey === rejectKey ||
+                                activeActionKey === pickedUpKey ||
+                                claim.status === "APPROVED" ||
+                                claim.status === "PICKED_UP"
+                              }
                               loading={activeActionKey === approveKey}
-                              onClick={() => handleClaimStatusChange(claim, "APPROVED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleClaimStatusChange(claim, "APPROVED");
+                              }}
                               size="sm"
                               variant="success"
                             >
@@ -379,9 +630,17 @@ export function AdminDashboardPage({ username }: { username: string }) {
                         <Tooltip title="Reject this ownership claim" arrow>
                           <span>
                             <Button
-                              disabled={activeActionKey === approveKey || claim.status === "REJECTED"}
+                              disabled={
+                                activeActionKey === approveKey ||
+                                activeActionKey === pickedUpKey ||
+                                claim.status === "REJECTED" ||
+                                claim.status === "PICKED_UP"
+                              }
                               loading={activeActionKey === rejectKey}
-                              onClick={() => handleClaimStatusChange(claim, "REJECTED")}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleClaimStatusChange(claim, "REJECTED");
+                              }}
                               size="sm"
                               variant="danger"
                             >
@@ -389,6 +648,27 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             </Button>
                           </span>
                         </Tooltip>
+                        {claim.status === "APPROVED" ? (
+                          <Tooltip title="Mark this approved claim as picked up" arrow>
+                            <span>
+                              <Button
+                                disabled={
+                                  activeActionKey === approveKey ||
+                                  activeActionKey === rejectKey
+                                }
+                                loading={activeActionKey === pickedUpKey}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleClaimStatusChange(claim, "PICKED_UP");
+                                }}
+                                size="sm"
+                                variant="primary"
+                              >
+                                Mark Picked Up
+                              </Button>
+                            </span>
+                          </Tooltip>
+                        ) : null}
                       </div>
                     </Card>
                   );
@@ -418,7 +698,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
               <img alt={`Photo of ${viewItem.title}`} className={styles.modalImage} src={viewItem.imageUrl} />
             ) : null}
             <dl className={styles.metaList}>
-              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{viewItem.status}</span></dd></div>
+              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{formatStatus(viewItem.status)}</span></dd></div>
               <div className={styles.metaRow}><dt>Category</dt><dd>{viewItem.category || "—"}</dd></div>
               <div className={styles.metaRow}><dt>Location</dt><dd>{viewItem.location || "—"}</dd></div>
               <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewItem.dateFound)}</dd></div>

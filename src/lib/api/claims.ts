@@ -1,5 +1,6 @@
 import type {
   Claim,
+  ClaimStatusLookupResponse,
   ClaimsListResponse,
   CreateClaimInput,
   MutationMessage,
@@ -24,6 +25,12 @@ export async function createClaim(payload: CreateClaimInput) {
   });
 }
 
+export async function fetchClaimStatus(claimId: string, email: string) {
+  return request<ClaimStatusLookupResponse>("/api/claims/status", {
+    query: { claimId, email },
+  });
+}
+
 export async function updateClaimStatus(claimId: string, payload: UpdateClaimStatusInput) {
   return request<Claim>(`/api/claims/${claimId}`, {
     body: JSON.stringify(payload),
@@ -37,7 +44,7 @@ export async function deleteClaim(claimId: string) {
   });
 }
 
-export async function clearClaimsByStatus(status: "APPROVED" | "REJECTED") {
+export async function clearClaimsByStatus(status: "APPROVED" | "REJECTED" | "PICKED_UP") {
   return request<{ cleared: number }>(`/api/claims?status=${status}`, {
     method: "DELETE",
   });

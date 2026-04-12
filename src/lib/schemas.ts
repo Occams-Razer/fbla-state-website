@@ -54,7 +54,7 @@ export const claimCreateSchema = z
 
 export const claimPatchSchema = z
   .object({
-    status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED", "PICKED_UP"]),
   })
   .strict();
 

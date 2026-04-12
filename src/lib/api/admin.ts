@@ -1,4 +1,4 @@
-import type { ItemListResponse } from "@/lib/types";
+import type { Item, ItemListResponse } from "@/lib/types";
 import { request } from "./client";
 
 interface AdminItemQuery {
@@ -15,4 +15,8 @@ export async function fetchAdminItems(query?: AdminItemQuery) {
       ...query,
     },
   });
+}
+
+export async function fetchAdminItemById(itemId: string) {
+  return request<Item>(`/api/admin/items/${itemId}`);
 }

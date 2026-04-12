@@ -62,10 +62,21 @@ export async function DELETE(
 
   try {
     const { id } = await context.params;
-    await prisma.item.update({
-      where: { id },
-      data: { isDeleted: true },
+    await prisma.$transaction(async (tx) => {
+      await tx.item.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+
+      await tx.claim.updateMany({
+        where: {
+          itemId: id,
+          isDeleted: false,
+        },
+        data: { isDeleted: true },
+      });
     });
+
     console.log(`[ADMIN] Item ${id} soft-deleted.`);
     return NextResponse.json({ message: "Item archived successfully" });
   } catch {
