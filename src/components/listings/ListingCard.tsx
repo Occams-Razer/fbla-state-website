@@ -1,20 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { Badge, Card } from "@/components/ui";
-import type { BadgeVariant } from "@/components/ui/Badge";
+import { Card } from "@/components/ui";
 import type { Item } from "@/lib/types";
 import styles from "./ListingCard.module.css";
 
 interface ListingCardProps {
   item: Item;
 }
-
-const STATUS_VARIANT: Record<Item["status"], BadgeVariant> = {
-  APPROVED: "success",
-  CLAIMED: "info",
-  PENDING: "warning",
-  REJECTED: "danger",
-};
 
 function formatDate(value: string) {
   const parsedDate = new Date(value);
@@ -31,7 +23,6 @@ function formatDate(value: string) {
 
 export function ListingCard({ item }: ListingCardProps) {
   const displayDate = item.dateFound || item.createdAt;
-  const badgeVariant = STATUS_VARIANT[item.status] ?? "neutral";
 
   return (
     <Link aria-label={`View details for ${item.title}`} className={styles.cardLink} href={`/items/${item.id}`}>
@@ -45,32 +36,24 @@ export function ListingCard({ item }: ListingCardProps) {
               src={item.imageUrl}
             />
           ) : (
-            <div className={styles.imageFallback}>No photo available</div>
+            <div className={styles.imageFallback} />
           )}
         </div>
 
         <div className={styles.content}>
           <div className={styles.titleRow}>
             <h3 className={styles.title}>{item.title}</h3>
-            <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
+            <span className={styles.categoryTag}>{item.category || "Other"}</span>
           </div>
 
-          <p className={styles.description}>{item.description || "No description provided."}</p>
-
-          <dl className={styles.metaList}>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Category</dt>
-              <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Location</dt>
-              <dd className={styles.metaValue}>{item.location || "Unknown"}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Date found</dt>
-              <dd className={styles.metaValue}>{formatDate(displayDate)}</dd>
-            </div>
-          </dl>
+          <p className={styles.metaRow}>
+            <span className={styles.metaIcon} aria-hidden="true">Loc</span>
+            <span>{item.location || "Unknown location"}</span>
+          </p>
+          <p className={styles.metaRow}>
+            <span className={styles.metaIcon} aria-hidden="true">Date</span>
+            <span>{formatDate(displayDate)}</span>
+          </p>
         </div>
       </Card>
     </Link>

@@ -3,10 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import Alert from "@mui/material/Alert";
-import Snackbar from "@mui/material/Snackbar";
-import { Badge, Button, Card, Input, Modal } from "@/components/ui";
-import type { BadgeVariant } from "@/components/ui/Badge";
+import { Button, Card, Input, Modal } from "@/components/ui";
 import { createClaim, fetchItemById } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import type { CreateClaimInput, Item } from "@/lib/types";
@@ -19,14 +16,12 @@ interface ClaimFormState {
   locationLost: string;
 }
 
-type ClaimFormErrors = Partial<Record<keyof ClaimFormState, string>>;
+interface SessionState {
+  authenticated: boolean;
+  username?: string;
+}
 
-const STATUS_VARIANT: Record<Item["status"], BadgeVariant> = {
-  APPROVED: "success",
-  CLAIMED: "info",
-  PENDING: "warning",
-  REJECTED: "danger",
-};
+type ClaimFormErrors = Partial<Record<keyof ClaimFormState, string>>;
 
 const INITIAL_FORM: ClaimFormState = {
   email: "",
@@ -92,6 +87,7 @@ export function ListingDetailPage() {
   const itemId = useMemo(() => readItemId(params.id), [params.id]);
 
   const [item, setItem] = useState<Item | null>(null);
+  const [session, setSession] = useState<SessionState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -101,9 +97,30 @@ export function ListingDetailPage() {
   const [formErrors, setFormErrors] = useState<ClaimFormErrors>({});
   const [claimSubmitError, setClaimSubmitError] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
-  const [claimSnackbarOpen, setClaimSnackbarOpen] = useState(false);
+
   const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
   const [copiedClaimId, setCopiedClaimId] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/auth/session")
+      .then((response) => response.json() as Promise<SessionState>)
+      .then((payload) => {
+        if (!ignore) {
+          setSession(payload);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setSession({ authenticated: false });
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -152,20 +169,6 @@ export function ListingDetailPage() {
     };
   }, [itemId, retryCount]);
 
-  function handleOpenClaimModal() {
-    setFormErrors({});
-    setClaimSubmitError(null);
-    setIsClaimModalOpen(true);
-  }
-
-  function handleCloseClaimModal() {
-    if (isSubmittingClaim) {
-      return;
-    }
-
-    setIsClaimModalOpen(false);
-  }
-
   function updateFormValue(field: keyof ClaimFormState, value: string) {
     setFormValues((previous) => ({
       ...previous,
@@ -179,6 +182,17 @@ export function ListingDetailPage() {
 
       return { ...previous, [field]: undefined };
     });
+  }
+
+  function handleRequestClick() {
+    if (session && !session.authenticated) {
+      router.push("/login");
+      return;
+    }
+
+    setClaimSubmitError(null);
+    setFormErrors({});
+    setIsClaimModalOpen(true);
   }
 
   async function handleClaimSubmit(event: FormEvent<HTMLFormElement>) {
@@ -253,11 +267,15 @@ export function ListingDetailPage() {
 
   const displayDate = item.dateFound || item.createdAt;
   const isClaimable = item.status === "APPROVED";
-  const badgeVariant = STATUS_VARIANT[item.status] ?? "neutral";
+  const requestLabel = session?.authenticated ? "Request This Item" : "Sign In to Request";
   const proofErrorId = formErrors.proofOfOwnership ? "proof-of-ownership-error" : undefined;
 
   return (
     <div className={styles.page}>
+      <Link className={styles.backLink} href="/search">
+        < Back to Search
+      </Link>
+
       <section aria-labelledby="listing-detail-title" className={styles.detailLayout}>
         <div className={styles.mediaWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -268,65 +286,60 @@ export function ListingDetailPage() {
           />
         </div>
 
-        <Card className={styles.infoCard}>
-          <div className={styles.headerRow}>
-            <h1 className={styles.title} id="listing-detail-title">
-              {item.title}
-            </h1>
-            <Badge variant={badgeVariant}>{item.status.toLowerCase()}</Badge>
-          </div>
+        <div className={styles.infoPanel}>
+          <span className={styles.categoryPill}>{item.category || "Other"}</span>
+
+          <h1 className={styles.title} id="listing-detail-title">
+            {item.title}
+          </h1>
 
           <p className={styles.description}>
             {item.description || "No additional description was provided for this item."}
           </p>
 
-          <dl className={styles.metaList}>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Category</dt>
-              <dd className={styles.metaValue}>{item.category || "Uncategorized"}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Found at</dt>
-              <dd className={styles.metaValue}>{item.location || "Unknown location"}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Date found</dt>
-              <dd className={styles.metaValue}>{formatDate(displayDate)}</dd>
-            </div>
-            <div className={styles.metaRow}>
-              <dt className={styles.metaLabel}>Listing ID</dt>
-              <dd className={styles.metaValue}>{item.id}</dd>
-            </div>
-          </dl>
-
-          <div className={styles.actionRow}>
-            <Button
-              disabled={!isClaimable}
-              onClick={handleOpenClaimModal}
-              size="lg"
-            >
-              Claim this item
-            </Button>
-            {!isClaimable ? (
-              <p className={styles.actionHint}>
-                This item is currently {item.status.toLowerCase()} and cannot be claimed.
-              </p>
-            ) : null}
+          <div className={styles.metaBlock}>
+            <p className={styles.metaTitle}>Found at</p>
+            <p className={styles.metaValue}>{item.location || "Unknown location"}</p>
           </div>
-        </Card>
+
+          <div className={styles.metaBlock}>
+            <p className={styles.metaTitle}>Date found</p>
+            <p className={styles.metaValue}>{formatDate(displayDate)}</p>
+          </div>
+
+          <Button
+            className={styles.requestButton}
+            disabled={!isClaimable}
+            onClick={handleRequestClick}
+            size="lg"
+            type="button"
+          >
+            {requestLabel}
+          </Button>
+
+          {!isClaimable ? (
+            <p className={styles.actionHint}>
+              This item is currently {item.status.toLowerCase()} and cannot be claimed.
+            </p>
+          ) : null}
+        </div>
       </section>
 
       <Modal
         description="Fill in the details below so our team can verify ownership."
         isOpen={isClaimModalOpen}
-        onClose={handleCloseClaimModal}
-        title="Submit a claim"
+        onClose={() => {
+          if (!isSubmittingClaim) {
+            setIsClaimModalOpen(false);
+          }
+        }}
+        title={`Claim "${item.title}"`}
       >
         <form className={styles.claimForm} noValidate onSubmit={handleClaimSubmit}>
           <Input
             autoComplete="name"
             error={formErrors.name}
-            label="Full name"
+            label="Full Name"
             onChange={(event) => updateFormValue("name", event.target.value)}
             required
             value={formValues.name}
@@ -335,25 +348,16 @@ export function ListingDetailPage() {
           <Input
             autoComplete="email"
             error={formErrors.email}
-            label="Email address"
+            label="School Email"
             onChange={(event) => updateFormValue("email", event.target.value)}
             required
             type="email"
             value={formValues.email}
           />
 
-          <Input
-            error={formErrors.locationLost}
-            hint="Example: Gym locker room, cafeteria table, room 204."
-            label="Where did you lose it?"
-            onChange={(event) => updateFormValue("locationLost", event.target.value)}
-            required
-            value={formValues.locationLost}
-          />
-
           <div className={styles.textareaField}>
             <label className={styles.textareaLabel} htmlFor="proof-of-ownership">
-              Proof of ownership <span className={styles.required}>*</span>
+              Proof of Ownership <span className={styles.required}>*</span>
             </label>
             <textarea
               aria-describedby={proofErrorId}
@@ -361,9 +365,9 @@ export function ListingDetailPage() {
               className={styles.textarea}
               id="proof-of-ownership"
               onChange={(event) => updateFormValue("proofOfOwnership", event.target.value)}
-              placeholder="Describe unique details (brand, color, stickers, lock screen, etc.)"
+              placeholder="Describe unique details about the item to prove that it is yours..."
               required
-              rows={5}
+              rows={4}
               value={formValues.proofOfOwnership}
             />
             {formErrors.proofOfOwnership ? (
@@ -373,36 +377,35 @@ export function ListingDetailPage() {
             ) : null}
           </div>
 
+          <Input
+            error={formErrors.locationLost}
+            label="Location Lost"
+            onChange={(event) => updateFormValue("locationLost", event.target.value)}
+            required
+            value={formValues.locationLost}
+          />
+
           {claimSubmitError ? (
             <p className={styles.submitError} role="alert">
               {claimSubmitError}
             </p>
           ) : null}
 
-          <div className={styles.claimActions}>
-            <Button
-              disabled={isSubmittingClaim}
-              onClick={handleCloseClaimModal}
-              type="button"
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-            <Button loading={isSubmittingClaim} type="submit">
-              Submit claim
-            </Button>
-          </div>
+          <Button fullWidth loading={isSubmittingClaim} size="lg" type="submit">
+            Submit claim
+          </Button>
         </form>
       </Modal>
 
       <Modal
         isOpen={submittedClaimId !== null}
         onClose={() => { setSubmittedClaimId(null); setCopiedClaimId(false); }}
-        title="Claim submitted!"
+        title="Claim submitted"
       >
         <div className={styles.claimSuccessBody}>
           <p className={styles.claimSuccessText}>
-            Your claim has been received. Save your Claim ID — you will need it along with your email to track your claim status.
+            Your claim has been received. Save your Claim ID. You will need it with your
+            email to track your claim status.
           </p>
           <div className={styles.claimIdBox}>
             <span className={styles.claimIdValue}>{submittedClaimId}</span>
@@ -425,7 +428,7 @@ export function ListingDetailPage() {
               className={styles.claimTrackLink}
               href={`/claims/status?claimId=${submittedClaimId ?? ""}`}
             >
-              Track claim status →
+              Track claim status
             </Link>
             <Button
               onClick={() => { setSubmittedClaimId(null); setCopiedClaimId(false); }}
@@ -436,20 +439,6 @@ export function ListingDetailPage() {
           </div>
         </div>
       </Modal>
-
-      <Snackbar
-        autoHideDuration={4000}
-        onClose={() => setClaimSnackbarOpen(false)}
-        open={claimSnackbarOpen}
-      >
-        <Alert
-          onClose={() => setClaimSnackbarOpen(false)}
-          severity="success"
-          sx={{ borderRadius: 2, width: "100%" }}
-        >
-          Claim submitted successfully. An admin will review it soon.
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

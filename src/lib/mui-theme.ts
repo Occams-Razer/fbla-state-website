@@ -2,21 +2,21 @@ import { createTheme } from "@mui/material/styles";
 
 export const muiTheme = createTheme({
   palette: {
-    primary:    { main: "#ef7400", dark: "#dc6b00", light: "#f8d6b3" },
-    success:    { main: "#12a44b" },
-    error:      { main: "#dc4141" },
-    warning:    { main: "#a87a00" },
-    info:       { main: "#2e6cd6" },
-    background: { default: "#fff6e5", paper: "#ffffff" },
+    primary:    { main: "#ef7c00", dark: "#d56f00", light: "#eac08f" },
+    success:    { main: "#35a24f" },
+    error:      { main: "#f25d5f" },
+    warning:    { main: "#e0bf44" },
+    info:       { main: "#4f73d8" },
+    background: { default: "#e8e1d2", paper: "#f1ece2" },
     text: {
-      primary:   "#2a2a2a",
-      secondary: "rgba(42,42,42,0.72)",
+      primary:   "#2c2d31",
+      secondary: "rgba(44,45,49,0.64)",
     },
   },
   shape: { borderRadius: 10 },
   typography: {
     fontFamily:
-      '"Avenir Next","Segoe UI","Inter","Helvetica Neue",Helvetica,Arial,sans-serif',
+      '"Avenir Next","Nunito Sans","Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif',
   },
   components: {
     MuiButtonBase: {
@@ -37,8 +37,8 @@ export const muiTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          backgroundColor: "rgba(42,42,42,0.08)",
-          "&::after": { background: "linear-gradient(90deg,transparent,rgba(42,42,42,0.06),transparent)" },
+          backgroundColor: "rgba(44,45,49,0.09)",
+          "&::after": { background: "linear-gradient(90deg,transparent,rgba(44,45,49,0.08),transparent)" },
         },
       },
     },

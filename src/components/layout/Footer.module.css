@@ -1,5 +1,5 @@
 .footer {
-  background: #3d3d3d;
+  background: var(--color-footer);
   color: #fff;
   margin-top: auto;
 }
@@ -10,44 +10,62 @@
   gap: var(--space-4);
   grid-template-columns: 1fr auto 1fr;
   margin: 0 auto;
-  max-width: 1280px;
-  padding: var(--space-6);
+  max-width: calc(var(--container-max) + (var(--space-6) * 2));
+  min-height: 84px;
+  padding: 0 var(--space-6);
   width: 100%;
 }
 
 .brand {
   align-items: center;
   display: inline-flex;
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  gap: 0.625rem;
-  margin: 0;
+  gap: 0.75rem;
 }
 
 .brandLogo {
-  display: block;
   height: auto;
   width: 3rem;
 }
 
-.copy {
-  font-size: 1rem;
+.brand span {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.copy,
+.year {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.96rem;
   margin: 0;
+}
+
+.copy {
   text-align: center;
 }
 
 .year {
-  font-size: 1rem;
   justify-self: end;
-  margin: 0;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1280px) {
+  .brand span {
+    font-size: 1.25rem;
+  }
+
+  .copy,
+  .year {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 900px) {
   .inner {
+    gap: var(--space-2);
     grid-template-columns: 1fr;
     justify-items: center;
-    text-align: center;
+    padding: var(--space-4);
   }
 
   .year {

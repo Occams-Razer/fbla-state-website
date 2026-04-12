@@ -23,11 +23,11 @@
 
 .main {
   flex: 1;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-10) var(--space-6) var(--space-12);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .main {
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-8) var(--space-4) var(--space-10);
   }
 }

@@ -1,26 +1,30 @@
 :root {
-  --color-bg: #fff6e5;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f1ece2;
-  --color-text: #2a2a2a;
-  --color-text-muted: rgba(42, 42, 42, 0.72);
-  --color-border: rgba(42, 42, 42, 0.35);
-  --color-border-strong: rgba(42, 42, 42, 0.5);
+  --color-bg: #e8e1d2;
+  --color-surface: #f1ece2;
+  --color-surface-strong: #ece6da;
+  --color-surface-muted: #dedad2;
+  --color-text: #2c2d31;
+  --color-text-muted: rgba(44, 45, 49, 0.64);
+  --color-border: rgba(44, 45, 49, 0.22);
+  --color-border-strong: rgba(44, 45, 49, 0.38);
 
-  --color-primary: #ef7400;
-  --color-primary-hover: #dc6b00;
-  --color-primary-soft: #f8d6b3;
+  --color-primary: #ef7c00;
+  --color-primary-hover: #d56f00;
+  --color-primary-soft: #eac08f;
 
-  --color-success: #12a44b;
-  --color-warning: #a87a00;
-  --color-danger: #dc4141;
-  --color-info: #2e6cd6;
-  --color-neutral: #7a7a7a;
+  --color-success: #35a24f;
+  --color-warning: #e0bf44;
+  --color-danger: #f25d5f;
+  --color-info: #4f73d8;
+  --color-neutral: #8a8479;
+
+  --color-footer: #3d3f42;
 
   --radius-xs: 6px;
   --radius-sm: 10px;
-  --radius-md: 15px;
-  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
 
   --space-1: 0.25rem;
@@ -32,43 +36,22 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-16: 4rem;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 2px 8px rgba(24, 24, 24, 0.08);
+  --shadow-md: 0 10px 24px rgba(24, 24, 24, 0.12);
 
-  --focus-ring: 0 0 0 3px rgba(239, 116, 0, 0.35);
-  --focus-outline: 2px solid rgba(239, 116, 0, 0.75);
+  --focus-ring: 0 0 0 3px rgba(239, 124, 0, 0.32);
+  --focus-outline: 2px solid rgba(239, 124, 0, 0.9);
 
   --font-sans:
-    "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Helvetica, Arial,
-    sans-serif;
-  --font-display: "Avenir Next", "Segoe UI", "Inter", sans-serif;
-}
+    "Avenir Next", "Nunito Sans", "Segoe UI", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  --font-display:
+    "Avenir Next Demi Bold", "Avenir Next", "Nunito Sans", "Segoe UI", sans-serif;
 
-[data-theme="dark"] {
-  --color-bg: #14120e;
-  --color-surface: #1e1b15;
-  --color-surface-muted: #27231b;
-  --color-text: #f0ead8;
-  --color-text-muted: rgba(240, 234, 216, 0.55);
-  --color-border: rgba(240, 234, 216, 0.1);
-  --color-border-strong: rgba(240, 234, 216, 0.2);
-
-  --color-primary: #f07d10;
-  --color-primary-hover: #ff8c1a;
-  --color-primary-soft: #3d2000;
-
-  --color-success: #1abf57;
-  --color-warning: #d4a017;
-  --color-danger: #f05252;
-  --color-info: #5b8fee;
-  --color-neutral: #8a8a8a;
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.65);
-
-  --focus-ring: 0 0 0 3px rgba(240, 125, 16, 0.4);
-  --focus-outline: 2px solid rgba(240, 125, 16, 0.8);
+  --container-max: 1264px;
+  --header-height: 88px;
 }
 
 *,
@@ -88,7 +71,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  line-height: 1.5;
+  line-height: 1.45;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -121,6 +104,10 @@ svg {
 :focus-visible {
   outline: var(--focus-outline);
   outline-offset: 2px;
+}
+
+html {
+  scroll-padding-top: var(--header-height);
 }
 
 @media (prefers-reduced-motion: reduce) {

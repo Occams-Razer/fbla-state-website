@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { Button, Card, Input } from "@/components/ui";
 import { loginAdmin } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
-import styles from "./AdminDashboardPage.module.css";
+import styles from "./AdminLoginPage.module.css";
 
 interface LoginFormState {
   username: string;

@@ -3,14 +3,14 @@
 import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ListingCard } from "@/components/listings";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { isApiError } from "@/lib/api/errors";
 import { fetchItems } from "@/lib/api/items";
 import type { Item, ItemSortOrder } from "@/lib/types";
 import styles from "./SearchBrowsePage.module.css";
 
 const CATEGORY_OPTIONS = [
-  { label: "All categories", value: "" },
+  { label: "All Categories", value: "" },
   { label: "Electronics", value: "Electronics" },
   { label: "Clothing", value: "Clothing" },
   { label: "Accessories", value: "Accessories" },
@@ -20,8 +20,8 @@ const CATEGORY_OPTIONS = [
 ] as const;
 
 const SORT_OPTIONS: Array<{ label: string; value: ItemSortOrder }> = [
-  { label: "Newest first", value: "newest" },
-  { label: "Oldest first", value: "oldest" },
+  { label: "Newest First", value: "newest" },
+  { label: "Oldest First", value: "oldest" },
 ];
 
 interface SearchQuery {
@@ -59,10 +59,6 @@ function buildNextUrl(pathname: string, query: SearchQuery) {
 
   const serialized = params.toString();
   return serialized.length ? `${pathname}?${serialized}` : pathname;
-}
-
-function pluralizeResults(count: number) {
-  return `${count} listing${count === 1 ? "" : "s"}`;
 }
 
 export function SearchBrowsePage() {
@@ -160,124 +156,113 @@ export function SearchBrowsePage() {
     <div className={styles.page}>
       <section aria-labelledby="browse-title" className={styles.header}>
         <h1 className={styles.title} id="browse-title">
-          Browse Found Items
+          Search Lost Items
         </h1>
         <p className={styles.subtitle}>
-          Search and filter approved listings to quickly find items that match what
-          you lost.
+          Browse items that have been found and turned in at school.
         </p>
       </section>
 
-      <Card className={styles.controlsCard} variant="outlined">
-        <form className={styles.controlsForm} onSubmit={handleSubmit}>
-          <Input
-            containerClassName={styles.searchField}
-            label="Search listings"
+      <form className={styles.controlsForm} onSubmit={handleSubmit}>
+        <label className={styles.searchWrap} htmlFor="search-listings">
+          <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+            <path d="M20 20L16.5 16.5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+          </svg>
+          <input
+            id="search-listings"
             name="search"
             onChange={(event) => setSearchDraft(event.target.value)}
-            placeholder="Try 'water bottle' or 'calculator'"
+            placeholder="Search by name, description..."
             value={searchDraft}
           />
+        </label>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="category-filter">
-              Category
-            </label>
-            <select
-              className={styles.select}
-              id="category-filter"
-              name="category"
-              onChange={(event) => setCategoryDraft(event.target.value)}
-              value={categoryDraft}
-            >
-              {CATEGORY_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <label className={styles.selectWrap}>
+          <span className={styles.srOnly}>Category</span>
+          <select
+            name="category"
+            onChange={(event) => setCategoryDraft(event.target.value)}
+            value={categoryDraft}
+          >
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="sort-filter">
-              Sort by date
-            </label>
-            <select
-              className={styles.select}
-              id="sort-filter"
-              name="sort"
-              onChange={(event) => setSortDraft(normalizeSort(event.target.value))}
-              value={sortDraft}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <label className={styles.selectWrap}>
+          <span className={styles.srOnly}>Sort by</span>
+          <select
+            name="sort"
+            onChange={(event) => setSortDraft(normalizeSort(event.target.value))}
+            value={sortDraft}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          <div className={styles.actions}>
-            <Button loading={isSubmitting} size="md" type="submit">
-              Apply
-            </Button>
-            <Button onClick={clearFilters} size="md" type="button" variant="secondary">
-              Reset
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      <section aria-busy={loading} aria-live="polite" className={styles.resultsSection}>
-        <div className={styles.resultsHeader}>
-          <h2 className={styles.resultsTitle}>Listings</h2>
-          <p className={styles.resultsCount}>
-            {loading ? "Loading listings..." : pluralizeResults(totalCount)}
-          </p>
+        <div className={styles.desktopActions}>
+          <Button loading={isSubmitting} size="md" type="submit">
+            Apply
+          </Button>
+          <Button onClick={clearFilters} size="md" type="button" variant="secondary">
+            Reset
+          </Button>
         </div>
+      </form>
 
-        {loading ? (
-          <div aria-hidden="true" className={styles.loadingGrid}>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Card className={styles.skeletonCard} key={`skeleton-${index}`} />
-            ))}
+      <p className={styles.resultCount} role="status">
+        {loading ? "Loading items..." : `${totalCount} items found`}
+      </p>
+
+      {!loading && error ? (
+        <Card className={styles.stateCard} role="alert" variant="muted">
+          <h2 className={styles.stateTitle}>Could not load listings</h2>
+          <p className={styles.stateText}>{error}</p>
+          <div className={styles.stateActions}>
+            <Button onClick={() => setRetryCount((count) => count + 1)} variant="secondary">
+              Try again
+            </Button>
           </div>
-        ) : null}
+        </Card>
+      ) : null}
 
-        {!loading && error ? (
-          <Card className={styles.stateCard} role="alert" variant="muted">
-            <h3 className={styles.stateTitle}>Could not load listings</h3>
-            <p className={styles.stateText}>{error}</p>
-            <div className={styles.stateActions}>
-              <Button onClick={() => setRetryCount((count) => count + 1)} variant="secondary">
-                Try again
-              </Button>
-            </div>
-          </Card>
-        ) : null}
-
-        {!loading && !error && items.length === 0 ? (
-          <Card className={styles.stateCard} variant="muted">
-            <h3 className={styles.stateTitle}>No matching listings</h3>
-            <p className={styles.stateText}>
-              Try a different search term or clear filters to see more approved items.
-            </p>
-            <div className={styles.stateActions}>
-              <Button onClick={clearFilters} variant="secondary">
-                Clear filters
-              </Button>
-            </div>
-          </Card>
-        ) : null}
-
-        {!loading && !error && items.length > 0 ? (
-          <div className={styles.grid}>
-            {items.map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
+      {!loading && !error && items.length === 0 ? (
+        <Card className={styles.stateCard} variant="muted">
+          <h2 className={styles.stateTitle}>No matching listings</h2>
+          <p className={styles.stateText}>
+            Try a different search term or clear filters to see more approved items.
+          </p>
+          <div className={styles.stateActions}>
+            <Button onClick={clearFilters} variant="secondary">
+              Clear filters
+            </Button>
           </div>
-        ) : null}
-      </section>
+        </Card>
+      ) : null}
+
+      {loading ? (
+        <div aria-hidden="true" className={styles.loadingGrid}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Card className={styles.skeletonCard} key={`skeleton-${index}`} />
+          ))}
+        </div>
+      ) : null}
+
+      {!loading && !error && items.length > 0 ? (
+        <div className={styles.grid}>
+          {items.map((item) => (
+            <ListingCard item={item} key={item.id} />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

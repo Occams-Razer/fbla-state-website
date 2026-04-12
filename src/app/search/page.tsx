@@ -5,7 +5,7 @@ import { SearchBrowsePage } from "@/components/search";
 export default function SearchPage() {
   return (
     <AppShell>
-      <Suspense fallback={<p style={{ padding: "1.5rem" }}>Loading search…</p>}>
+      <Suspense fallback={<p style={{ padding: "1.5rem" }}>Loading search...</p>}>
         <SearchBrowsePage />
       </Suspense>
     </AppShell>

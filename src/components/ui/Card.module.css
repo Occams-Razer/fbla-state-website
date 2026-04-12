@@ -1,5 +1,5 @@
 .card {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -7,7 +7,7 @@
 }
 
 .variant_default {
-  background: var(--color-surface);
+  background: var(--color-surface-strong);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
 }

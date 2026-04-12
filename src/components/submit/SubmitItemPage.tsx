@@ -16,6 +16,8 @@ interface SubmitFormState {
   description: string;
   location: string;
   dateFound: string;
+  submitterName: string;
+  submitterEmail: string;
 }
 
 type FormErrors = Partial<Record<keyof SubmitFormState | "image", string>>;
@@ -37,6 +39,8 @@ const INITIAL_FORM: SubmitFormState = {
   dateFound: "",
   description: "",
   location: "",
+  submitterEmail: "",
+  submitterName: "",
   title: "",
 };
 
@@ -67,6 +71,10 @@ function validateForm(form: SubmitFormState, imageUrl: string | null): FormError
     }
   }
 
+  if (form.submitterEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.submitterEmail.trim())) {
+    errors.submitterEmail = "Enter a valid email address.";
+  }
+
   return errors;
 }
 
@@ -87,9 +95,11 @@ export function SubmitItemPage() {
   const isBusy = uploadStatus === "uploading" || isSubmitting;
 
   const uploadButtonLabel = useMemo(() => {
-    if (uploadStatus === "uploading") return null; // spinner shown instead
-    if (uploadStatus === "uploaded") return uploadedImageName ? `\u2713 ${uploadedImageName}` : "\u2713 Image uploaded";
-    return "Choose image";
+    if (uploadStatus === "uploading") return null;
+    if (uploadStatus === "uploaded") {
+      return uploadedImageName ? `Uploaded: ${uploadedImageName}` : "Image uploaded";
+    }
+    return "Click to upload a photo";
   }, [uploadStatus, uploadedImageName]);
 
   function updateField<K extends keyof SubmitFormState>(field: K, value: SubmitFormState[K]) {
@@ -191,20 +201,58 @@ export function SubmitItemPage() {
     <div className={styles.page}>
       <section aria-labelledby="submit-item-title" className={styles.header}>
         <h1 className={styles.title} id="submit-item-title">
-          Submit a Found Item
+          Report a Found Item
         </h1>
         <p className={styles.subtitle}>
-          Upload a clear photo and add details so the rightful owner can claim it.
+          Found something? Fill out this form to help someone get it back.
+        </p>
+        <p className={styles.requiredHint}>
+          <span aria-hidden="true">*</span> indicates required item.
         </p>
       </section>
 
       <Card className={styles.formCard}>
         <form className={styles.form} noValidate onSubmit={handleSubmit}>
+          <div className={styles.field}>
+            <span className={styles.label}>
+              Photo of item <span className={styles.required}>*</span>
+            </span>
+            <label
+              className={[
+                styles.uploadDropzone,
+                isBusy ? styles.uploadDropzoneBusy : "",
+                uploadStatus === "uploaded" ? styles.uploadDropzoneUploaded : "",
+              ].filter(Boolean).join(" ")}
+              htmlFor="item-image"
+            >
+              <span className={styles.uploadIcon} aria-hidden="true">IMG</span>
+              <span>{uploadButtonLabel ?? "Uploading..."}</span>
+            </label>
+            <input
+              accept="image/*"
+              className={styles.fileInputHidden}
+              disabled={isBusy}
+              id="item-image"
+              onChange={handleImageUpload}
+              type="file"
+            />
+            {errors.image ? (
+              <p className={styles.fieldError} role="alert">
+                {errors.image}
+              </p>
+            ) : null}
+            {uploadError ? (
+              <p className={styles.fieldError} role="alert">
+                {uploadError}
+              </p>
+            ) : null}
+          </div>
+
           <Input
             error={errors.title}
-            label="Item title"
+            label="Item Title"
             onChange={(event) => updateField("title", event.target.value)}
-            placeholder="Example: Black Hydro Flask with sticker"
+            placeholder="e.g. Blue Nike Water Bottle"
             required
             value={form.title}
           />
@@ -232,17 +280,35 @@ export function SubmitItemPage() {
             ) : null}
           </div>
 
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="item-description">
+              Description
+            </label>
+            <textarea
+              className={styles.textarea}
+              id="item-description"
+              onChange={(event) => updateField("description", event.target.value)}
+              placeholder="Any distinguishing features, color, brand, condition..."
+              rows={4}
+              value={form.description}
+            />
+            {errors.description ? (
+              <p className={styles.fieldError} role="alert">
+                {errors.description}
+              </p>
+            ) : null}
+          </div>
+
           <div className={styles.twoCol}>
             <Input
-              label="Found location"
+              label="Where was it found?"
               onChange={(event) => updateField("location", event.target.value)}
-              placeholder="Example: Cafeteria table near the windows"
+              placeholder="e.g. Gym, North Commons"
               value={form.location}
             />
-
             <div className={styles.field}>
               <label className={styles.label} htmlFor="item-date-found">
-                Date found
+                Date Found
               </label>
               <input
                 className={styles.dateInput}
@@ -260,71 +326,31 @@ export function SubmitItemPage() {
             </div>
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="item-description">
-              Description
-            </label>
-            <textarea
-              className={styles.textarea}
-              id="item-description"
-              onChange={(event) => updateField("description", event.target.value)}
-              placeholder="Color, brand, unique marks, or any identifying details..."
-              rows={4}
-              value={form.description}
+          <div className={styles.separator} />
+
+          <div className={styles.twoCol}>
+            <Input
+              label="Your Name"
+              onChange={(event) => updateField("submitterName", event.target.value)}
+              placeholder="Your name"
+              value={form.submitterName}
             />
-            {errors.description ? (
-              <p className={styles.fieldError} role="alert">
-                {errors.description}
-              </p>
-            ) : null}
+            <Input
+              error={errors.submitterEmail}
+              label="Your Email"
+              onChange={(event) => updateField("submitterEmail", event.target.value)}
+              placeholder="you@students.mcpasd.k12.wi.us"
+              type="email"
+              value={form.submitterEmail}
+            />
           </div>
 
-          <div className={styles.field}>
-            <div className={styles.fileInputRow}>
-              <span className={styles.label}>
-                Item photo <span className={styles.required}>*</span>
-              </span>
-              <label
-                className={[
-                  styles.fileInputLabel,
-                  isBusy ? styles.fileInputLabelBusy : "",
-                  uploadStatus === "uploaded" ? styles.fileInputLabelUploaded : "",
-                ].filter(Boolean).join(" ")}
-                htmlFor="item-image"
-              >
-                {uploadStatus === "uploading" ? (
-                  <>
-                    <span aria-hidden="true" className={styles.fileInputSpinner} />
-                    <span>Uploading...</span>
-                  </>
-                ) : uploadButtonLabel}
-              </label>
-              <input
-                accept="image/*"
-                className={styles.fileInputHidden}
-                disabled={isBusy}
-                id="item-image"
-                onChange={handleImageUpload}
-                type="file"
-              />
+          {uploadedImageUrl ? (
+            <div className={styles.previewWrap}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="Uploaded item preview" className={styles.previewImage} src={uploadedImageUrl} />
             </div>
-            {errors.image ? (
-              <p className={styles.fieldError} role="alert">
-                {errors.image}
-              </p>
-            ) : null}
-            {uploadError ? (
-              <p className={styles.fieldError} role="alert">
-                {uploadError}
-              </p>
-            ) : null}
-            {uploadedImageUrl ? (
-              <div className={styles.previewWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt="Uploaded item preview" className={styles.previewImage} src={uploadedImageUrl} />
-              </div>
-            ) : null}
-          </div>
+          ) : null}
 
           {submitError ? (
             <p className={styles.submitError} role="alert">
@@ -336,14 +362,14 @@ export function SubmitItemPage() {
             <div className={styles.successState} role="status">
               <p className={styles.successText}>{submitSuccess}</p>
               <Link className={styles.successLink} href="/search">
-                View browse page
+                View search page
               </Link>
             </div>
           ) : null}
 
           <div className={styles.actions}>
-            <Button loading={isSubmitting} size="lg" type="submit">
-              Submit item
+            <Button fullWidth loading={isSubmitting} size="lg" type="submit">
+              Submit Found item
             </Button>
           </div>
         </form>

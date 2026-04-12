@@ -1,21 +1,21 @@
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Footer.module.css";
 
 export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
-        <p className={styles.brand}>
+        <Link className={styles.brand} href="/">
           <Image
             alt="Foundry logo"
             className={styles.brandLogo}
             height={44}
             src="/logo.svg"
-            style={{ height: "auto" }}
             width={48}
           />
           <span>FOUNDRY</span>
-        </p>
+        </Link>
         <p className={styles.copy}>Middleton High School&apos;s Lost &amp; Found System</p>
         <p className={styles.year}>&copy;2026 MPL</p>
       </div>

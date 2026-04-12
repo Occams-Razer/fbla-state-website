@@ -31,37 +31,32 @@ type ClaimResult = {
   item: { id: string; title: string; itemStatus: string } | null;
 };
 
-const STATUS_CONFIG: Record<string, { label: string; icon: string; noteClass: string; note: string }> = {
+const STATUS_CONFIG: Record<string, { label: string; noteClass: string; note: string }> = {
   PENDING: {
     label: "Pending Review",
-    icon: "○",
     noteClass: "notePending",
     note: "Your claim is under review. You will be notified by email once a decision is made.",
   },
   APPROVED: {
     label: "Approved",
-    icon: "✓",
     noteClass: "noteApproved",
-    note: "Your claim was approved! Visit the school's lost and found office to collect your item.",
+    note: "Your claim was approved. Visit the school lost-and-found office to collect your item.",
   },
   REJECTED: {
     label: "Not Approved",
-    icon: "✕",
     noteClass: "noteRejected",
     note: "Your claim was not approved. Contact your school's office for more information.",
   },
   PICKED_UP: {
     label: "Picked Up",
-    icon: "✓",
     noteClass: "noteApproved",
-    note: "Your item has been picked up. Thank you for using Foundry!",
+    note: "Your item has been picked up. Thank you for using Foundry.",
   },
 };
 
 function ResultPanel({ result }: { result: ClaimResult }) {
   const cfg = STATUS_CONFIG[result.status] ?? {
     label: result.status.toLowerCase(),
-    icon: "◎",
     noteClass: "notePending",
     note: "",
   };
@@ -69,7 +64,6 @@ function ResultPanel({ result }: { result: ClaimResult }) {
   return (
     <div className={styles.resultWrap}>
       <div className={`${styles.statusBanner} ${styles[`banner_${result.status}`]}`}>
-        <span className={styles.statusIcon} aria-hidden="true">{cfg.icon}</span>
         <div>
           <p className={styles.statusBannerLabel}>Claim Status</p>
           <p className={styles.statusBannerValue}>{cfg.label}</p>
@@ -107,10 +101,10 @@ function ResultPanel({ result }: { result: ClaimResult }) {
 function EmptyPanel() {
   return (
     <div className={styles.emptyPanel}>
-      <span className={styles.emptyIcon} aria-hidden="true">◎</span>
       <p className={styles.emptyTitle}>No claim looked up yet</p>
       <p className={styles.emptyText}>
-        Enter your Claim ID and the email you used when submitting. You can find your Claim ID in the confirmation message you received.
+        Enter your Claim ID and the email you used when submitting. You can find your
+        Claim ID in the confirmation message.
       </p>
     </div>
   );
@@ -125,7 +119,7 @@ function ClaimStatusContent() {
 
   useEffect(() => {
     const id = searchParams.get("claimId");
-    if (id) setLookup((prev) => ({ ...prev, claimId: id }));
+    if (id) setLookup((previous) => ({ ...previous, claimId: id }));
   }, [searchParams]);
 
   const [error, setError] = useState<string | null>(null);
@@ -173,7 +167,7 @@ function ClaimStatusContent() {
             <Input
               autoComplete="off"
               label="Claim ID"
-              onChange={(e) => setLookup((p) => ({ ...p, claimId: e.target.value }))}
+              onChange={(event) => setLookup((previous) => ({ ...previous, claimId: event.target.value }))}
               placeholder="e.g. cmnsd52by000168kn5a80dhr9"
               required
               value={lookup.claimId}
@@ -181,7 +175,7 @@ function ClaimStatusContent() {
             <Input
               autoComplete="email"
               label="Email address"
-              onChange={(e) => setLookup((p) => ({ ...p, email: e.target.value }))}
+              onChange={(event) => setLookup((previous) => ({ ...previous, email: event.target.value }))}
               placeholder="you@example.com"
               required
               type="email"
@@ -190,7 +184,7 @@ function ClaimStatusContent() {
             {error ? (
               <p className={styles.errorText} role="alert">{error}</p>
             ) : null}
-            <Button loading={isLoading} size="lg" type="submit" fullWidth>
+            <Button fullWidth loading={isLoading} size="lg" type="submit">
               Check status
             </Button>
           </form>
@@ -207,7 +201,7 @@ function ClaimStatusContent() {
 export default function ClaimStatusPage() {
   return (
     <AppShell>
-      <Suspense fallback={<div className={styles.page}><p>Loading…</p></div>}>
+      <Suspense fallback={<div className={styles.page}><p>Loading...</p></div>}>
         <ClaimStatusContent />
       </Suspense>
     </AppShell>

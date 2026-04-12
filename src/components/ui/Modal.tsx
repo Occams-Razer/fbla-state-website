@@ -27,7 +27,6 @@ function getFocusableElements(root: HTMLElement | null) {
     (element) => !element.hasAttribute("disabled"),
   );
 }
-
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -162,7 +161,7 @@ export function Modal({
             onClick={onClose}
             type="button"
           >
-            ×
+            x
           </button>
         </div>
         {description ? (

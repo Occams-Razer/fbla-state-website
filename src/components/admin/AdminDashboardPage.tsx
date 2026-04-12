@@ -1,16 +1,15 @@
 "use client";
 
-import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useState } from "react";
 import Fade from "@mui/material/Fade";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import Tooltip from "@mui/material/Tooltip";
 import { Button, Card, Modal } from "@/components/ui";
 import {
   clearClaimsByStatus,
-  fetchAdminItemById,
   clearItemsByStatus,
+  fetchAdminItemById,
   fetchAdminItems,
   fetchClaims,
   updateClaimStatus,
@@ -21,35 +20,34 @@ import type { Claim, ClaimStatus, Item, ItemStatus } from "@/lib/types";
 import styles from "./AdminDashboardPage.module.css";
 
 type MainTab = "items" | "claims";
-type ItemSubTab = "PENDING" | "APPROVED" | "REJECTED";
-type ClaimSubTab = "PENDING" | "APPROVED" | "REJECTED" | "PICKED_UP";
+type ItemFilter = "PENDING" | "APPROVED" | "REJECTED" | "CLAIMED";
+type ClaimFilter = "PENDING" | "APPROVED" | "REJECTED" | "PICKED_UP";
 
 function formatDate(value: string) {
   const parsedDate = new Date(value);
   if (Number.isNaN(parsedDate.getTime())) return value || "Unknown";
   return new Intl.DateTimeFormat("en-US", {
-    day: "numeric", month: "short", year: "numeric",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   }).format(parsedDate);
 }
 
-function statusTagClass(status: string): string {
-  switch (status) {
-    case "APPROVED": return styles.tagApproved;
-    case "REJECTED": return styles.tagRejected;
-    case "PICKED_UP": return styles.tagClaimed;
-    case "CLAIMED":  return styles.tagClaimed;
-    default:         return styles.tagPending;
-  }
+function formatStatus(status: string): string {
+  return status.toLowerCase().replace("_", " ");
 }
 
-function formatStatus(status: string): string {
+function statusClass(status: string) {
   switch (status) {
-    case "PENDING":   return "Pending";
-    case "APPROVED":  return "Approved";
-    case "REJECTED":  return "Rejected";
-    case "CLAIMED":   return "Claimed";
-    case "PICKED_UP": return "Picked Up";
-    default:          return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    case "APPROVED":
+      return styles.tagApproved;
+    case "REJECTED":
+      return styles.tagRejected;
+    case "PICKED_UP":
+    case "CLAIMED":
+      return styles.tagClaimed;
+    default:
+      return styles.tagPending;
   }
 }
 
@@ -57,21 +55,21 @@ function SkeletonCard() {
   return (
     <Card className={styles.entryCard}>
       <div className={styles.entryHeader}>
-        <Skeleton variant="text" width="55%" height={26} />
-        <Skeleton variant="rounded" width={70} height={22} />
+        <Skeleton height={28} variant="text" width="44%" />
+        <Skeleton height={24} variant="rounded" width={78} />
       </div>
-      <Skeleton variant="text" width="35%" height={18} />
-      <Skeleton variant="text" width="40%" height={18} />
-      <Skeleton variant="text" width="30%" height={18} />
-      <Skeleton variant="rectangular" height={48} sx={{ mt: 1, borderRadius: 2 }} />
+      <Skeleton height={18} variant="text" width="72%" />
+      <Skeleton height={18} variant="text" width="64%" />
+      <Skeleton height={18} variant="text" width="48%" />
+      <Skeleton height={56} sx={{ borderRadius: 2, mt: 1 }} variant="rectangular" />
     </Card>
   );
 }
 
 export function AdminDashboardPage({ username }: { username: string }) {
-  const [mainTab, setMainTab] = useState<MainTab>("items");
-  const [itemSubTab, setItemSubTab] = useState<ItemSubTab>("PENDING");
-  const [claimSubTab, setClaimSubTab] = useState<ClaimSubTab>("PENDING");
+  const [mainTab, setMainTab] = useState<MainTab>("claims");
+  const [itemFilter, setItemFilter] = useState<ItemFilter>("PENDING");
+  const [claimFilter, setClaimFilter] = useState<ClaimFilter>("PENDING");
 
   const [items, setItems] = useState<Item[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -87,25 +85,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
   const [viewItemId, setViewItemId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<Item | null>(null);
   const [viewItemLoading, setViewItemLoading] = useState(false);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
-  const [statsNoticePulse, setStatsNoticePulse] = useState(false);
-
-  function markStatsUpdated() {
-    setLastUpdatedAt(new Date());
-    setStatsNoticePulse(true);
-  }
-
-  useEffect(() => {
-    if (!statsNoticePulse) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setStatsNoticePulse(false);
-    }, 1300);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [statsNoticePulse]);
 
   useEffect(() => {
     let ignore = false;
@@ -117,7 +96,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         const results = await fetchAdminItems();
         if (!ignore) {
           setItems(results.items);
-          markStatsUpdated();
         }
       } catch (error) {
         if (ignore) return;
@@ -134,7 +112,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         const results = await fetchClaims();
         if (!ignore) {
           setClaims(results.claims);
-          markStatsUpdated();
         }
       } catch (error) {
         if (ignore) return;
@@ -146,19 +123,30 @@ export function AdminDashboardPage({ username }: { username: string }) {
 
     void loadItems();
     void loadClaims();
-    return () => { ignore = true; };
+
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  const visibleItems = useMemo(() => items.filter((item) => item.status === itemFilter), [items, itemFilter]);
+  const visibleClaims = useMemo(() => claims.filter((claim) => claim.status === claimFilter), [claims, claimFilter]);
 
   async function handleItemStatusChange(item: Item, nextStatus: ItemStatus) {
     const actionKey = `item:${item.id}:${nextStatus}`;
     setActiveActionKey(actionKey);
     try {
       const updated = await updateItemStatus(item.id, { status: nextStatus });
-      setItems((prev) => prev.map((e) => (e.id === item.id ? updated : e)));
-      setSnackbar({ message: `Item "${item.title}" marked ${nextStatus.toLowerCase()}.`, severity: "success" });
-      markStatsUpdated();
+      setItems((previous) => previous.map((entry) => (entry.id === item.id ? updated : entry)));
+      setSnackbar({
+        message: `Item "${item.title}" marked ${nextStatus.toLowerCase()}.`,
+        severity: "success",
+      });
     } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not update item status.", severity: "error" });
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not update item status.",
+        severity: "error",
+      });
     } finally {
       setActiveActionKey(null);
     }
@@ -169,20 +157,29 @@ export function AdminDashboardPage({ username }: { username: string }) {
     setActiveActionKey(actionKey);
     try {
       const updated = await updateClaimStatus(claim.id, { status: nextStatus });
-      setClaims((prev) =>
-        prev.map((e) =>
-          e.id === claim.id ? { ...e, ...updated, item: updated.item ?? e.item } : e,
+      setClaims((previous) =>
+        previous.map((entry) =>
+          entry.id === claim.id ? { ...entry, ...updated, item: updated.item ?? entry.item } : entry,
         ),
       );
+
       if (updated.item?.id) {
-        setItems((prev) =>
-          prev.map((item) => (item.id === updated.item!.id ? { ...item, ...updated.item } : item)),
+        setItems((previous) =>
+          previous.map((item) =>
+            item.id === updated.item!.id ? { ...item, ...updated.item } : item,
+          ),
         );
       }
-      setSnackbar({ message: `Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`, severity: "success" });
-      markStatsUpdated();
+
+      setSnackbar({
+        message: `Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`,
+        severity: "success",
+      });
     } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not update claim status.", severity: "error" });
+      setSnackbar({
+        message: isApiError(error) ? error.message : "Could not update claim status.",
+        severity: "error",
+      });
     } finally {
       setActiveActionKey(null);
     }
@@ -196,15 +193,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
       const item = await fetchAdminItemById(id);
       setViewItem(item);
     } catch {
-      // item stays null — modal shows error state
+      setViewItem(null);
     } finally {
       setViewItemLoading(false);
     }
-  }
-
-  function handleCloseView() {
-    setViewItemId(null);
-    setViewItem(null);
   }
 
   function handleCardKeyDown(event: ReactKeyboardEvent<HTMLElement>, onActivate: () => void) {
@@ -212,16 +204,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
       event.preventDefault();
       onActivate();
     }
-  }
-
-  function openItemsSubTab(status: ItemSubTab) {
-    setMainTab("items");
-    setItemSubTab(status);
-  }
-
-  function openClaimsSubTab(status: ClaimSubTab) {
-    setMainTab("claims");
-    setClaimSubTab(status);
   }
 
   async function handleClearItems(status: "APPROVED" | "REJECTED") {
@@ -239,7 +221,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
         severity: "success",
       });
-      markStatsUpdated();
     } catch (error) {
       setSnackbar({
         message: isApiError(error) ? error.message : "Could not clear items.",
@@ -265,7 +246,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
         severity: "success",
       });
-      markStatsUpdated();
     } catch (error) {
       setSnackbar({
         message: isApiError(error) ? error.message : "Could not clear claims.",
@@ -276,134 +256,66 @@ export function AdminDashboardPage({ username }: { username: string }) {
     }
   }
 
-  const visibleItems  = items.filter((i) => i.status === itemSubTab);
-  const visibleClaims = claims.filter((c) => c.status === claimSubTab);
-  const pendingSubmitsCount = items.filter((item) => item.status === "PENDING").length;
-  const pendingClaimsCount = claims.filter((claim) => claim.status === "PENDING").length;
-  const searchVisibleItemsCount = items.filter((item) => item.status === "APPROVED").length;
-  const claimedItemsCount = items.filter((item) => item.status === "CLAIMED").length;
-  const lastUpdatedLabel = lastUpdatedAt
-    ? new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        second: "2-digit",
-      }).format(lastUpdatedAt)
-    : "Not synced yet";
-
   return (
     <div className={styles.page}>
-      {/* Header */}
       <section aria-labelledby="admin-dashboard-title" className={styles.header}>
         <h1 className={styles.title} id="admin-dashboard-title">Admin Dashboard</h1>
         <p className={styles.subtitle}>
-          Signed in as <strong>{username}</strong>. Moderate item listings and resolve claim requests.
+          Moderate items and review claim requests. Signed in as <strong>{username}</strong>.
         </p>
       </section>
 
-      <section aria-label="Quick stats" className={styles.quickStatsSection}>
-        <div className={styles.quickStatsHeader}>
-          <h2 className={styles.quickStatsTitle}>Quick Stats</h2>
-          <p
-            className={`${styles.quickStatsNotice} ${statsNoticePulse ? styles.quickStatsNoticePulse : ""}`}
-            role="status"
-          >
-            <span aria-hidden="true" className={styles.quickStatsDot} />
-            <span className={styles.quickStatsTime}>Updated {lastUpdatedLabel}</span>
-          </p>
-        </div>
-        <div className={styles.quickStatsGrid}>
-          <button
-            className={`${styles.quickStatTile} ${styles.quickStatPending} ${styles.quickStatButton}`}
-            onClick={() => openItemsSubTab("PENDING")}
-            type="button"
-          >
-            <p className={styles.quickStatLabel}>Submits Waiting for Review</p>
-            <p className={styles.quickStatValue}>{pendingSubmitsCount}</p>
-          </button>
-          <button
-            className={`${styles.quickStatTile} ${styles.quickStatClaims} ${styles.quickStatButton}`}
-            onClick={() => openClaimsSubTab("PENDING")}
-            type="button"
-          >
-            <p className={styles.quickStatLabel}>Claims Waiting for Review</p>
-            <p className={styles.quickStatValue}>{pendingClaimsCount}</p>
-          </button>
-          <button
-            className={`${styles.quickStatTile} ${styles.quickStatItems} ${styles.quickStatButton}`}
-            onClick={() => openItemsSubTab("APPROVED")}
-            type="button"
-          >
-            <p className={styles.quickStatLabel}>Total Items on Search Page</p>
-            <p className={styles.quickStatValue}>{searchVisibleItemsCount}</p>
-          </button>
-          <button
-            className={`${styles.quickStatTile} ${styles.quickStatApproved} ${styles.quickStatButton}`}
-            onClick={() => openClaimsSubTab("APPROVED")}
-            type="button"
-          >
-            <p className={styles.quickStatLabel}>Items Approved to Claimed</p>
-            <p className={styles.quickStatValue}>{claimedItemsCount}</p>
-          </button>
-        </div>
-      </section>
-
-      {/* Main tabs */}
       <div className={styles.tabBar} role="tablist" aria-label="Admin data tabs">
-        {(["items", "claims"] as MainTab[]).map((tab) => (
-          <button
-            key={tab}
-            aria-selected={mainTab === tab}
-            className={styles.tabButton}
-            onClick={() => setMainTab(tab)}
-            role="tab"
-            type="button"
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+        <button
+          aria-selected={mainTab === "items"}
+          className={[styles.tabButton, mainTab === "items" ? styles.tabButtonActive : ""].filter(Boolean).join(" ")}
+          onClick={() => setMainTab("items")}
+          role="tab"
+          type="button"
+        >
+          Items
+        </button>
+        <button
+          aria-selected={mainTab === "claims"}
+          className={[styles.tabButton, mainTab === "claims" ? styles.tabButtonActive : ""].filter(Boolean).join(" ")}
+          onClick={() => setMainTab("claims")}
+          role="tab"
+          type="button"
+        >
+          Claims
+        </button>
       </div>
 
-      {/* Items panel */}
-      <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
+      <Fade in={mainTab === "items"} timeout={200} unmountOnExit>
         <section className={styles.section} role="tabpanel">
-          {/* Sub-tabs */}
-          <div className={styles.subTabHeader}>
-            <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
-              {([
-                { key: "PENDING", label: "Submitted", cls: "" },
-                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-              ] as { key: ItemSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-                <button
-                  key={key}
-                  aria-selected={itemSubTab === key}
-                  className={`${styles.subTabButton} ${cls}`}
-                  onClick={() => setItemSubTab(key)}
-                  role="tab"
-                  type="button"
-                >
-                  {label}
-                  <span className={styles.subTabCount}>
-                    {items.filter((i) => i.status === key).length}
-                  </span>
-                </button>
-              ))}
-            </div>
+          <div className={styles.filterRow}>
+            <select
+              className={styles.select}
+              onChange={(event) => setItemFilter(event.target.value as ItemFilter)}
+              value={itemFilter}
+            >
+              <option value="PENDING">Submitted</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="CLAIMED">Claimed</option>
+            </select>
+            <p className={styles.countLabel}>{visibleItems.length} items</p>
+          </div>
 
-            {itemSubTab === "APPROVED" || itemSubTab === "REJECTED" ? (
+          {(itemFilter === "APPROVED" || itemFilter === "REJECTED") ? (
+            <div className={styles.clearWrap}>
               <Button
-                disabled={items.filter((item) => item.status === itemSubTab).length === 0}
-                loading={clearingKey === `clear:items:${itemSubTab}`}
-                onClick={() => handleClearItems(itemSubTab)}
+                disabled={visibleItems.length === 0}
+                loading={clearingKey === `clear:items:${itemFilter}`}
+                onClick={() => handleClearItems(itemFilter)}
                 size="sm"
                 variant="danger"
               >
-                {itemSubTab === "APPROVED" ? "Clear Approved" : "Clear Rejected"}
+                {itemFilter === "APPROVED" ? "Clear Approved" : "Clear Rejected"}
               </Button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
-          {/* Loading skeletons */}
           {isLoadingItems ? (
             <div className={styles.list}>
               {[1, 2, 3].map((n) => <SkeletonCard key={n} />)}
@@ -415,130 +327,99 @@ export function AdminDashboardPage({ username }: { username: string }) {
           ) : null}
 
           {!isLoadingItems && !itemsError && visibleItems.length === 0 ? (
-            <Fade in timeout={300}>
-              <div>
-                <Card variant="muted">
-                  <p className={styles.mutedText}>No items in this category.</p>
-                </Card>
-              </div>
-            </Fade>
+            <Card variant="muted">
+              <p className={styles.mutedText}>No items in this category.</p>
+            </Card>
           ) : null}
 
           {!isLoadingItems && !itemsError && visibleItems.length > 0 ? (
-            <Fade in timeout={300}>
-              <div className={styles.list}>
-                {visibleItems.map((item) => {
-                  const approveKey = `item:${item.id}:APPROVED`;
-                  const rejectKey  = `item:${item.id}:REJECTED`;
-                  return (
-                    <Card
-                      aria-label={`View details for ${item.title}`}
-                      className={`${styles.entryCard} ${styles.entryCardClickable}`}
-                      key={item.id}
-                      onClick={() => void handleViewItem(item.id)}
-                      onKeyDown={(event) => handleCardKeyDown(event, () => void handleViewItem(item.id))}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className={styles.entryHeader}>
-                        <h2 className={styles.entryTitle}>{item.title}</h2>
-                        <span className={`${styles.statusTag} ${statusTagClass(item.status)}`}>
-                          {formatStatus(item.status)}
-                        </span>
-                      </div>
-                      <dl className={styles.metaList}>
-                        <div className={styles.metaRow}><dt>Category</dt><dd>{item.category || "Unknown"}</dd></div>
-                        <div className={styles.metaRow}><dt>Location</dt><dd>{item.location || "Unknown"}</dd></div>
-                        <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(item.createdAt)}</dd></div>
-                      </dl>
-                      <p className={styles.description}>{item.description || "No description provided."}</p>
-                      <div className={styles.actions}>
-                        <Tooltip title="Make this item visible to the public" arrow>
-                          <span>
-                            <Button
-                              disabled={activeActionKey === rejectKey || item.status === "APPROVED"}
-                              loading={activeActionKey === approveKey}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleItemStatusChange(item, "APPROVED");
-                              }}
-                              size="sm"
-                              variant="success"
-                            >
-                              Approve
-                            </Button>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title="Hide this item from the public" arrow>
-                          <span>
-                            <Button
-                              disabled={activeActionKey === approveKey || item.status === "REJECTED"}
-                              loading={activeActionKey === rejectKey}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleItemStatusChange(item, "REJECTED");
-                              }}
-                              size="sm"
-                              variant="danger"
-                            >
-                              Reject
-                            </Button>
-                          </span>
-                        </Tooltip>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </Fade>
+            <div className={styles.list}>
+              {visibleItems.map((item) => {
+                const approveKey = `item:${item.id}:APPROVED`;
+                const rejectKey = `item:${item.id}:REJECTED`;
+
+                return (
+                  <Card
+                    aria-label={`View details for ${item.title}`}
+                    className={styles.entryCard}
+                    key={item.id}
+                    onClick={() => void handleViewItem(item.id)}
+                    onKeyDown={(event) => handleCardKeyDown(event, () => void handleViewItem(item.id))}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.entryHeader}>
+                      <h2 className={styles.entryTitle}>{item.title}</h2>
+                      <span className={[styles.statusTag, statusClass(item.status)].join(" ")}>
+                        {formatStatus(item.status)}
+                      </span>
+                    </div>
+                    <p className={styles.inlineMeta}>{item.category || "Unknown"} - {item.location || "Unknown"} - {formatDate(item.createdAt)}</p>
+                    <p className={styles.description}>{item.description || "No description provided."}</p>
+
+                    <div className={styles.actions}>
+                      <Button
+                        disabled={activeActionKey === rejectKey || item.status === "APPROVED"}
+                        loading={activeActionKey === approveKey}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleItemStatusChange(item, "APPROVED");
+                        }}
+                        size="sm"
+                        variant="success"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        disabled={activeActionKey === approveKey || item.status === "REJECTED"}
+                        loading={activeActionKey === rejectKey}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleItemStatusChange(item, "REJECTED");
+                        }}
+                        size="sm"
+                        variant="danger"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           ) : null}
         </section>
       </Fade>
 
-      {/* Claims panel */}
-      <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
+      <Fade in={mainTab === "claims"} timeout={200} unmountOnExit>
         <section className={styles.section} role="tabpanel">
-          {/* Sub-tabs */}
-          <div className={styles.subTabHeader}>
-            <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
-              {([
-                { key: "PENDING", label: "Pending", cls: "" },
-                { key: "APPROVED", label: "Approved", cls: styles.subTabApproved },
-                { key: "REJECTED", label: "Rejected", cls: styles.subTabRejected },
-                { key: "PICKED_UP", label: "Picked Up", cls: styles.subTabClaimed },
-              ] as { key: ClaimSubTab; label: string; cls: string }[]).map(({ key, label, cls }) => (
-                <button
-                  key={key}
-                  aria-selected={claimSubTab === key}
-                  className={`${styles.subTabButton} ${cls}`}
-                  onClick={() => setClaimSubTab(key)}
-                  role="tab"
-                  type="button"
-                >
-                  {label}
-                  <span className={styles.subTabCount}>
-                    {claims.filter((c) => c.status === key).length}
-                  </span>
-                </button>
-              ))}
-            </div>
+          <div className={styles.filterRow}>
+            <select
+              className={styles.select}
+              onChange={(event) => setClaimFilter(event.target.value as ClaimFilter)}
+              value={claimFilter}
+            >
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="PICKED_UP">Picked Up</option>
+            </select>
+            <p className={styles.countLabel}>{visibleClaims.length} claims</p>
+          </div>
 
-            {claimSubTab === "APPROVED" || claimSubTab === "REJECTED" || claimSubTab === "PICKED_UP" ? (
+          {(claimFilter === "APPROVED" || claimFilter === "REJECTED" || claimFilter === "PICKED_UP") ? (
+            <div className={styles.clearWrap}>
               <Button
-                disabled={claims.filter((claim) => claim.status === claimSubTab).length === 0}
-                loading={clearingKey === `clear:claims:${claimSubTab}`}
-                onClick={() => handleClearClaims(claimSubTab)}
+                disabled={visibleClaims.length === 0}
+                loading={clearingKey === `clear:claims:${claimFilter}`}
+                onClick={() => handleClearClaims(claimFilter)}
                 size="sm"
                 variant="danger"
               >
-                {claimSubTab === "APPROVED"
-                  ? "Clear Approved"
-                  : claimSubTab === "REJECTED"
-                    ? "Clear Rejected"
-                    : "Clear Picked Up"}
+                {claimFilter === "PICKED_UP" ? "Clear Picked Up" : `Clear ${formatStatus(claimFilter)}`}
               </Button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           {isLoadingClaims ? (
             <div className={styles.list}>
@@ -551,178 +432,165 @@ export function AdminDashboardPage({ username }: { username: string }) {
           ) : null}
 
           {!isLoadingClaims && !claimsError && visibleClaims.length === 0 ? (
-            <Fade in timeout={300}>
-              <div>
-                <Card variant="muted">
-                  <p className={styles.mutedText}>No claims in this category.</p>
-                </Card>
-              </div>
-            </Fade>
+            <Card variant="muted">
+              <p className={styles.mutedText}>No claims in this category.</p>
+            </Card>
           ) : null}
 
           {!isLoadingClaims && !claimsError && visibleClaims.length > 0 ? (
-            <Fade in timeout={300}>
-              <div className={styles.list}>
-                {visibleClaims.map((claim) => {
-                  const approveKey = `claim:${claim.id}:APPROVED`;
-                  const rejectKey  = `claim:${claim.id}:REJECTED`;
-                  const pickedUpKey = `claim:${claim.id}:PICKED_UP`;
-                  const claimItemId = claim.item?.id;
-                  const isClaimCardClickable = Boolean(claimItemId);
-                  return (
-                    <Card
-                      aria-label={
-                        isClaimCardClickable
-                          ? `View item details for claim by ${claim.name}`
-                          : `Claim details for ${claim.name}`
-                      }
-                      className={`${styles.entryCard} ${isClaimCardClickable ? styles.entryCardClickable : ""}`}
-                      key={claim.id}
-                      onClick={isClaimCardClickable ? () => void handleViewItem(claimItemId as string) : undefined}
-                      onKeyDown={
-                        isClaimCardClickable
-                          ? (event) =>
-                              handleCardKeyDown(event, () => void handleViewItem(claimItemId as string))
-                          : undefined
-                      }
-                      role={isClaimCardClickable ? "button" : undefined}
-                      tabIndex={isClaimCardClickable ? 0 : undefined}
-                    >
-                      <div className={styles.entryHeader}>
-                        <div>
-                          <h2 className={styles.entryTitle}>{claim.name}</h2>
-                          {claim.item?.id ? (
-                            <p className={styles.claimItemLabel}>{claim.item.title ?? "Linked item"}</p>
-                          ) : null}
-                        </div>
-                        <span className={`${styles.statusTag} ${statusTagClass(claim.status)}`}>
-                          {formatStatus(claim.status)}
-                        </span>
+            <div className={styles.list}>
+              {visibleClaims.map((claim) => {
+                const approveKey = `claim:${claim.id}:APPROVED`;
+                const rejectKey = `claim:${claim.id}:REJECTED`;
+                const pickedUpKey = `claim:${claim.id}:PICKED_UP`;
+                const claimItemId = claim.item?.id;
+                const isCardClickable = Boolean(claimItemId);
+
+                return (
+                  <Card
+                    aria-label={isCardClickable ? `View item for claim by ${claim.name}` : `Claim by ${claim.name}`}
+                    className={styles.entryCard}
+                    key={claim.id}
+                    onClick={isCardClickable ? () => void handleViewItem(claimItemId as string) : undefined}
+                    onKeyDown={
+                      isCardClickable
+                        ? (event) => handleCardKeyDown(event, () => void handleViewItem(claimItemId as string))
+                        : undefined
+                    }
+                    role={isCardClickable ? "button" : undefined}
+                    tabIndex={isCardClickable ? 0 : undefined}
+                  >
+                    <div className={styles.entryHeader}>
+                      <div>
+                        <h2 className={styles.entryTitle}>{claim.name}</h2>
+                        <p className={styles.inlineMeta}>
+                          Claiming: {claim.item?.title ?? "Unknown item"} - {formatDate(claim.createdAt)}
+                        </p>
                       </div>
-                      <dl className={styles.metaList}>
-                        <div className={styles.metaRow}><dt>Email</dt><dd>{claim.email}</dd></div>
-                        <div className={styles.metaRow}><dt>Lost at</dt><dd>{claim.locationLost || "Unknown"}</dd></div>
-                        <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(claim.createdAt)}</dd></div>
-                      </dl>
-                      <p className={styles.description}>{claim.proofOfOwnership}</p>
-                      <div className={styles.actions}>
-                        <Tooltip title="Approve this claim and notify the claimant" arrow>
-                          <span>
-                            <Button
-                              disabled={
-                                activeActionKey === rejectKey ||
-                                activeActionKey === pickedUpKey ||
-                                claim.status === "APPROVED" ||
-                                claim.status === "PICKED_UP"
-                              }
-                              loading={activeActionKey === approveKey}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleClaimStatusChange(claim, "APPROVED");
-                              }}
-                              size="sm"
-                              variant="success"
-                            >
-                              Approve
-                            </Button>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title="Reject this ownership claim" arrow>
-                          <span>
-                            <Button
-                              disabled={
-                                activeActionKey === approveKey ||
-                                activeActionKey === pickedUpKey ||
-                                claim.status === "REJECTED" ||
-                                claim.status === "PICKED_UP"
-                              }
-                              loading={activeActionKey === rejectKey}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleClaimStatusChange(claim, "REJECTED");
-                              }}
-                              size="sm"
-                              variant="danger"
-                            >
-                              Reject
-                            </Button>
-                          </span>
-                        </Tooltip>
-                        {claim.status === "APPROVED" ? (
-                          <Tooltip title="Mark this approved claim as picked up" arrow>
-                            <span>
-                              <Button
-                                disabled={
-                                  activeActionKey === approveKey ||
-                                  activeActionKey === rejectKey
-                                }
-                                loading={activeActionKey === pickedUpKey}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  void handleClaimStatusChange(claim, "PICKED_UP");
-                                }}
-                                size="sm"
-                                variant="primary"
-                              >
-                                Mark Picked Up
-                              </Button>
-                            </span>
-                          </Tooltip>
-                        ) : null}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </Fade>
+                      <span className={[styles.statusTag, statusClass(claim.status)].join(" ")}>
+                        {formatStatus(claim.status)}
+                      </span>
+                    </div>
+
+                    <div className={styles.claimGrid}>
+                      <p><span>Email</span>{claim.email}</p>
+                      <p><span>Lost Location</span>{claim.locationLost || "Unknown"}</p>
+                    </div>
+                    <p className={styles.claimProof}>
+                      <span>Proof of Ownership</span>
+                      {claim.proofOfOwnership}
+                    </p>
+
+                    <div className={styles.actions}>
+                      {claimItemId ? (
+                        <Button
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleViewItem(claimItemId);
+                          }}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          View Item
+                        </Button>
+                      ) : null}
+                      <Button
+                        disabled={
+                          activeActionKey === rejectKey ||
+                          activeActionKey === pickedUpKey ||
+                          claim.status === "APPROVED" ||
+                          claim.status === "PICKED_UP"
+                        }
+                        loading={activeActionKey === approveKey}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleClaimStatusChange(claim, "APPROVED");
+                        }}
+                        size="sm"
+                        variant="success"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        disabled={
+                          activeActionKey === approveKey ||
+                          activeActionKey === pickedUpKey ||
+                          claim.status === "REJECTED" ||
+                          claim.status === "PICKED_UP"
+                        }
+                        loading={activeActionKey === rejectKey}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleClaimStatusChange(claim, "REJECTED");
+                        }}
+                        size="sm"
+                        variant="danger"
+                      >
+                        Reject
+                      </Button>
+                      {claim.status === "APPROVED" ? (
+                        <Button
+                          disabled={activeActionKey === approveKey || activeActionKey === rejectKey}
+                          loading={activeActionKey === pickedUpKey}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleClaimStatusChange(claim, "PICKED_UP");
+                          }}
+                          size="sm"
+                        >
+                          Mark Picked Up
+                        </Button>
+                      ) : null}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           ) : null}
         </section>
       </Fade>
 
-      {/* Item detail modal */}
       <Modal
         isOpen={viewItemId !== null}
-        onClose={handleCloseView}
-        title={viewItem?.title ?? (viewItemLoading ? "Loading…" : "Item details")}
+        onClose={() => {
+          setViewItemId(null);
+          setViewItem(null);
+        }}
+        title={viewItem?.title ?? (viewItemLoading ? "Loading..." : "Item details")}
       >
         {viewItemLoading ? (
           <div className={styles.modalLoading}>
             {[1, 2, 3].map((n) => (
-              <Skeleton key={n} variant="text" height={22} sx={{ borderRadius: 1 }} />
+              <Skeleton height={22} key={n} sx={{ borderRadius: 1 }} variant="text" />
             ))}
           </div>
         ) : viewItem ? (
           <div className={styles.modalBody}>
             {viewItem.imageUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
+              // eslint-disable-next-line @next/next/no-img-element
               <img alt={`Photo of ${viewItem.title}`} className={styles.modalImage} src={viewItem.imageUrl} />
             ) : null}
-            <dl className={styles.metaList}>
-              <div className={styles.metaRow}><dt>Status</dt><dd><span className={`${styles.statusTag} ${statusTagClass(viewItem.status)}`}>{formatStatus(viewItem.status)}</span></dd></div>
-              <div className={styles.metaRow}><dt>Category</dt><dd>{viewItem.category || "—"}</dd></div>
-              <div className={styles.metaRow}><dt>Location</dt><dd>{viewItem.location || "—"}</dd></div>
-              <div className={styles.metaRow}><dt>Date found</dt><dd>{formatDate(viewItem.dateFound)}</dd></div>
-              <div className={styles.metaRow}><dt>Submitted</dt><dd>{formatDate(viewItem.createdAt)}</dd></div>
-            </dl>
-            {viewItem.description ? (
-              <p className={styles.modalDescription}>{viewItem.description}</p>
-            ) : null}
+            <p className={styles.modalMeta}><span>Status</span>{formatStatus(viewItem.status)}</p>
+            <p className={styles.modalMeta}><span>Category</span>{viewItem.category || "Unknown"}</p>
+            <p className={styles.modalMeta}><span>Location</span>{viewItem.location || "Unknown"}</p>
+            <p className={styles.modalMeta}><span>Date found</span>{formatDate(viewItem.dateFound)}</p>
+            <p className={styles.modalMeta}><span>Submitted</span>{formatDate(viewItem.createdAt)}</p>
+            {viewItem.description ? <p className={styles.modalDescription}>{viewItem.description}</p> : null}
           </div>
         ) : (
           <p className={styles.mutedText}>Could not load item details.</p>
         )}
       </Modal>
 
-      {/* Snackbar for success/error feedback */}
       <Snackbar
-        open={!!snackbar}
         autoHideDuration={4000}
         onClose={() => setSnackbar(null)}
+        open={!!snackbar}
       >
         <Alert
-          severity={snackbar?.severity ?? "success"}
           onClose={() => setSnackbar(null)}
-          sx={{ width: "100%", borderRadius: 2 }}
+          severity={snackbar?.severity ?? "success"}
+          sx={{ borderRadius: 2, width: "100%" }}
         >
           {snackbar?.message}
         </Alert>
