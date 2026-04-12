@@ -66,7 +66,7 @@ function baseTemplate(title: string, body: string): string {
           <td style="padding:32px;">
             <h1 style="margin:0 0 16px;font-size:22px;color:#111;">${title}</h1>
             ${body}
-            <p style="margin:32px 0 0;font-size:12px;color:#888;">
+            <p style="margin:32px 0 0;font-size:12px;color:#666;">
               Middleton High School Lost &amp; Found — Foundry
             </p>
           </td>
@@ -103,7 +103,7 @@ export async function sendClaimApprovedEmail(claim: {
   const body = `
     <p style="margin:0 0 16px;color:#333;line-height:1.6;">
       Hi <strong>${claim.name}</strong>,<br><br>
-      Great news — your claim for the item below has been <strong style="color:#16a34a;">approved</strong>.
+      Great news — your claim for the item below has been <strong style="color:#0f6d33;">approved</strong>.
       Please come to <strong>${pickupLocation}</strong> to pick it up.
     </p>
     <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">

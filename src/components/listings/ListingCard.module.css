@@ -98,7 +98,7 @@
 
 .detailLink {
   align-items: center;
-  color: var(--color-primary);
+  color: var(--color-link);
   display: inline-flex;
   font-weight: 700;
   gap: var(--space-1);
@@ -107,5 +107,5 @@
 }
 
 .detailLink:hover {
-  color: var(--color-primary-hover);
+  color: var(--color-link-hover);
 }

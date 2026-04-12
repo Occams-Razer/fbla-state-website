@@ -13,7 +13,7 @@
   align-items: center;
   background: color-mix(in srgb, var(--color-primary) 18%, transparent);
   border-radius: var(--radius-pill);
-  color: var(--color-primary);
+  color: var(--color-text);
   display: inline-flex;
   font-size: 0.95rem;
   font-weight: 700;
@@ -31,7 +31,7 @@
 }
 
 .titleAccent {
-  color: var(--color-primary);
+  color: var(--color-link);
   display: block;
 }
 
@@ -39,7 +39,7 @@
   background: linear-gradient(135deg, var(--color-primary) 0%, #ff9a00 100%);
   border-radius: var(--radius-pill);
   box-shadow: 0 4px 20px rgba(239, 116, 0, 0.32);
-  color: #fff;
+  color: var(--color-on-primary);
   display: inline-block;
   font-size: 0.78rem;
   font-weight: 700;

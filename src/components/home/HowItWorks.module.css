@@ -44,7 +44,7 @@
   align-items: center;
   background: var(--color-primary-soft);
   border-radius: var(--radius-sm);
-  color: var(--color-primary);
+  color: var(--color-text);
   display: inline-flex;
   font-size: 1.25rem;
   height: 2.2rem;

@@ -218,22 +218,22 @@
 
 .quickStatPending .quickStatLabel,
 .quickStatPending .quickStatValue {
-  color: color-mix(in srgb, orange 84%, black);
+  color: var(--color-on-tint);
 }
 
 .quickStatApproved .quickStatLabel,
 .quickStatApproved .quickStatValue {
-  color: color-mix(in srgb, var(--color-success) 86%, black);
+  color: var(--color-on-tint);
 }
 
 .quickStatClaims .quickStatLabel,
 .quickStatClaims .quickStatValue {
-  color: color-mix(in srgb, var(--color-primary) 88%, black);
+  color: var(--color-on-tint);
 }
 
 .quickStatItems .quickStatLabel,
 .quickStatItems .quickStatValue {
-  color: color-mix(in srgb, #7c3aed 86%, black);
+  color: var(--color-on-tint);
 }
 
 .profileCard {
@@ -273,7 +273,7 @@
 .tabButton[aria-selected="true"] {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .subTabBar {
@@ -307,30 +307,31 @@
 .subTabButton[aria-selected="true"] {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .subTabApproved[aria-selected="true"] {
   background: var(--color-success);
   border-color: var(--color-success);
-  color: #fff;
+  color: var(--color-on-success);
 }
 
 .subTabRejected[aria-selected="true"] {
   background: var(--color-danger);
   border-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-on-danger);
 }
 
 .subTabClaimed[aria-selected="true"] {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .subTabCount {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 999px;
+  color: #fff;
   font-size: 0.75rem;
   min-width: 1.25rem;
   padding: 0.05rem 0.35rem;
@@ -338,8 +339,8 @@
 }
 
 .subTabButton:not([aria-selected="true"]) .subTabCount {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-text) 16%, transparent);
+  color: var(--color-text);
 }
 
 .section {
@@ -427,7 +428,7 @@
 }
 
 .entryTitleLink:hover {
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 
 .entryTitleLink:hover .entryTitle {
@@ -438,7 +439,7 @@
 .claimItemLink {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-link);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
@@ -487,22 +488,22 @@
 
 .tagPending {
   background: color-mix(in srgb, orange 24%, transparent);
-  color: color-mix(in srgb, orange 90%, black);
+  color: var(--color-on-tint);
 }
 
 .tagApproved {
   background: color-mix(in srgb, var(--color-success) 24%, transparent);
-  color: color-mix(in srgb, var(--color-success) 92%, black);
+  color: var(--color-on-tint);
 }
 
 .tagRejected {
   background: color-mix(in srgb, var(--color-danger) 24%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 92%, black);
+  color: var(--color-on-tint);
 }
 
 .tagClaimed {
   background: color-mix(in srgb, var(--color-primary) 24%, transparent);
-  color: color-mix(in srgb, var(--color-primary) 92%, black);
+  color: var(--color-on-tint);
 }
 
 .metaList {
@@ -539,12 +540,12 @@
 }
 
 .errorText {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   margin: 0;
 }
 
 .successText {
-  color: var(--color-success);
+  color: var(--color-success-text);
   margin: 0;
 }
 

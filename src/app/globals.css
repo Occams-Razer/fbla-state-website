@@ -10,6 +10,14 @@
   --color-primary: #ef7400;
   --color-primary-hover: #dc6b00;
   --color-primary-soft: #f8d6b3;
+  --color-on-primary: #000000;
+  --color-on-success: #000000;
+  --color-on-danger: #000000;
+  --color-link: #9a4300;
+  --color-link-hover: #7a3300;
+  --color-success-text: #0f6d33;
+  --color-danger-text: #8d2626;
+  --color-on-tint: var(--color-text);
 
   --color-success: #12a44b;
   --color-warning: #a87a00;
@@ -57,6 +65,11 @@
   --color-primary: #f07d10;
   --color-primary-hover: #ff8c1a;
   --color-primary-soft: #3d2000;
+  --color-link: #f07d10;
+  --color-link-hover: #ff8c1a;
+  --color-success-text: var(--color-success);
+  --color-danger-text: var(--color-danger);
+  --color-on-tint: var(--color-text);
 
   --color-success: #1abf57;
   --color-warning: #d4a017;
