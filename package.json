@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate && prisma migrate deploy && npx prisma db seed && next build",
     "db:push": "prisma db push",
     "db:seed": "prisma db execute --file prisma/seed.sql",
     "db:sync": "npm run db:push && npm run db:seed"
