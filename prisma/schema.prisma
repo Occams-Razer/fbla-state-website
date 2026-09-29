@@ -41,3 +41,8 @@ model Claim {
 
   item Item @relation(fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 }
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"
+}

@@ -8,7 +8,12 @@ import { getClientIp, rateLimit } from "@/lib/rate-limit";
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX = 20;
 
+/**
+ * Admin login endpoint.
+ * Flow: rate limit -> validate input -> verify credentials -> issue session cookie.
+ */
 export async function POST(request: Request) {
+  // Throttle repeated attempts per client IP to reduce brute-force risk.
   const ip = getClientIp(request);
   const limited = rateLimit(`login:${ip}`, LOGIN_MAX, LOGIN_WINDOW_MS);
   if (!limited.ok) {
@@ -22,6 +27,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Parse and validate the incoming JSON body.
     const body = await request.json();
     const parsed = loginBodySchema.safeParse(body);
     if (!parsed.success) {
@@ -29,14 +35,17 @@ export async function POST(request: Request) {
     }
     const { username, password } = parsed.data;
 
+    // Look up the admin account by username.
     const admin = await prisma.admin.findUnique({
       where: { username },
     });
 
+    // Reject if account does not exist or password hash does not match.
     if (!admin || !(await bcrypt.compare(password, admin.password))) {
       return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
     }
 
+    // On success, create a signed session token and set it as an HttpOnly cookie.
     const token = await createSessionToken(admin.id, admin.username);
     const response = NextResponse.json({ authenticated: true, username: admin.username });
     setSessionCookie(response, token);
