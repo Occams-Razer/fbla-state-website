@@ -3,15 +3,10 @@
  * WARNING: This deletes ALL existing claims and items first.
  */
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "./src/generated/client";
+import { createDbAdapter } from "./src/lib/db-adapter";
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "file:./dev.db";
-}
-
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter: createDbAdapter() });
 
 const ITEMS = [
   {

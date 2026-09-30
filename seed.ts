@@ -1,11 +1,11 @@
 /**
  * Seeds the Admin user (bcrypt password). Run: npm run db:seed
- * Requires: DATABASE_URL, SEED_ADMIN_PASSWORD (min 8 chars)
+ * Requires: SEED_ADMIN_PASSWORD (min 8 chars). Uses DATABASE_URL (+ DATABASE_AUTH_TOKEN for Turso), defaults to file:./dev.db
  * Optional: SEED_ADMIN_USERNAME (default: admin)
  */
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "./src/generated/client";
+import { createDbAdapter } from "./src/lib/db-adapter";
 import bcrypt from "bcryptjs";
 
 declare const process: {
@@ -13,12 +13,7 @@ declare const process: {
   exit(code?: number): never;
 };
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "file:./dev.db";
-}
-
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter: createDbAdapter() });
 
 async function main() {
   const rawPassword = process.env.SEED_ADMIN_PASSWORD;
