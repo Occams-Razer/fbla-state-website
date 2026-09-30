@@ -4,23 +4,20 @@
  * and records what has been applied in a _turso_migrations table.
  *
  * Run: npm run db:migrate:turso
- * Requires: DATABASE_URL (libsql://...) and DATABASE_AUTH_TOKEN
+ * Requires: DATABASE_URL + DATABASE_AUTH_TOKEN, or TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
  */
 import "dotenv/config";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { createClient } from "@libsql/client";
+import { resolveDbConfig } from "../src/lib/db-adapter";
 
-const url = process.env.DATABASE_URL?.trim();
-if (!url) {
-  console.error("Set DATABASE_URL (libsql://...) and DATABASE_AUTH_TOKEN first.");
+if (!process.env.DATABASE_URL?.trim() && !process.env.TURSO_DATABASE_URL?.trim()) {
+  console.error("Set DATABASE_URL or TURSO_DATABASE_URL (libsql://...) and its auth token first.");
   process.exit(1);
 }
 
-const client = createClient({
-  url,
-  authToken: process.env.DATABASE_AUTH_TOKEN?.trim() || undefined,
-});
+const client = createClient(resolveDbConfig());
 
 const migrationsDir = path.join(process.cwd(), "prisma", "migrations");
 
