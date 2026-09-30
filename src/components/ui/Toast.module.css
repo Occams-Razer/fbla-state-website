@@ -1,0 +1,29 @@
+.region {
+  bottom: var(--space-6);
+  display: flex;
+  justify-content: center;
+  left: var(--space-4);
+  pointer-events: none;
+  position: fixed;
+  right: var(--space-4);
+  z-index: 80;
+}
+
+.toast {
+  animation: rise 200ms ease-out;
+  box-shadow: var(--shadow-lg);
+  max-width: 32rem;
+  pointer-events: auto;
+  width: 100%;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,22 +1,23 @@
 :root {
-  --color-bg: #fff6e5;
+  color-scheme: light;
+
+  /* Colour: neutral surfaces, orange reserved for accents and actions */
+  --color-bg: #faf9f7;
   --color-surface: #ffffff;
-  --color-surface-muted: #f1ece2;
-  --color-text: #2a2a2a;
-  --color-text-muted: rgba(42, 42, 42, 0.72);
-  --color-border: rgba(42, 42, 42, 0.35);
-  --color-border-strong: rgba(42, 42, 42, 0.5);
+  --color-surface-muted: #f3f1ee;
+  --color-text: #1f1d1a;
+  --color-text-muted: #5f5b55;
+  --color-border: #e4e0da;
+  --color-border-strong: #8f8a82;
 
   --color-primary: #ef7400;
   --color-primary-hover: #dc6b00;
-  --color-primary-soft: #f8d6b3;
-  --color-on-primary: #000000;
-  --color-on-success: #000000;
-  --color-on-danger: #000000;
+  --color-primary-soft: #fdebd8;
+  --color-on-primary: #1f1d1a;
+  --color-on-success: #10130f;
+  --color-on-danger: #1a0e0e;
   --color-link: #9a4300;
   --color-link-hover: #7a3300;
-  --color-success-text: #0f6d33;
-  --color-danger-text: #8d2626;
   --color-on-tint: var(--color-text);
 
   --color-success: #12a44b;
@@ -24,6 +25,36 @@
   --color-danger: #dc4141;
   --color-info: #2e6cd6;
   --color-neutral: #7a7a7a;
+
+  --color-success-text: #0f6d33;
+  --color-warning-text: #7a5600;
+  --color-danger-text: #8d2626;
+  --color-info-text: #1f4ea1;
+
+  --color-success-soft: #e3f4e9;
+  --color-warning-soft: #fbf0d0;
+  --color-danger-soft: #fbe4e4;
+  --color-info-soft: #e2ebfb;
+  --color-neutral-soft: #ecebe9;
+
+  --color-footer-bg: #1f1d1a;
+  --color-footer-text: #f5f3ef;
+  --color-overlay: rgba(0, 0, 0, 0.58);
+
+  /* Type scale */
+  --text-xs: 0.8rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.4rem + 4vw, 4rem);
+  --text-lead: clamp(1rem, 0.9rem + 0.6vw, 1.25rem);
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
 
   --radius-xs: 6px;
   --radius-sm: 10px;
@@ -41,11 +72,26 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
+  /*
+   * Layout. Breakpoints cannot be variables in media queries, so every
+   * stylesheet uses the same three values:
+   *   600px  phones
+   *   768px  tablets, and where the navbar collapses
+   *   1024px small laptops
+   */
+  --layout-max: 1280px;
+  --header-height: 76px;
 
-  --focus-ring: 0 0 0 3px rgba(239, 116, 0, 0.35);
-  --focus-outline: 2px solid rgba(239, 116, 0, 0.75);
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.14);
+  --shadow-primary: 0 4px 14px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  --shadow-success: 0 4px 14px color-mix(in srgb, var(--color-success) 30%, transparent);
+  --shadow-danger: 0 4px 14px color-mix(in srgb, var(--color-danger) 30%, transparent);
+
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --focus-outline: 2px solid color-mix(in srgb, var(--color-primary) 75%, transparent);
 
   --font-sans:
     var(--font-metropolis), "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Helvetica, Arial,
@@ -54,22 +100,21 @@
 }
 
 [data-theme="dark"] {
-  --color-bg: #14120e;
-  --color-surface: #1e1b15;
-  --color-surface-muted: #27231b;
-  --color-text: #f0ead8;
-  --color-text-muted: rgba(240, 234, 216, 0.55);
-  --color-border: rgba(240, 234, 216, 0.1);
-  --color-border-strong: rgba(240, 234, 216, 0.2);
+  color-scheme: dark;
+
+  --color-bg: #121110;
+  --color-surface: #1c1b19;
+  --color-surface-muted: #262422;
+  --color-text: #f2efea;
+  --color-text-muted: #aaa59d;
+  --color-border: #2f2d2a;
+  --color-border-strong: #6b6760;
 
   --color-primary: #f07d10;
   --color-primary-hover: #ff8c1a;
   --color-primary-soft: #3d2000;
-  --color-link: #f07d10;
-  --color-link-hover: #ff8c1a;
-  --color-success-text: var(--color-success);
-  --color-danger-text: var(--color-danger);
-  --color-on-tint: var(--color-text);
+  --color-link: #ff9a3d;
+  --color-link-hover: #ffb066;
 
   --color-success: #1abf57;
   --color-warning: #d4a017;
@@ -77,11 +122,24 @@
   --color-info: #5b8fee;
   --color-neutral: #8a8a8a;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.65);
+  --color-success-text: #5fd98d;
+  --color-warning-text: #e8bd4a;
+  --color-danger-text: #ff8a8a;
+  --color-info-text: #8fb3ff;
 
-  --focus-ring: 0 0 0 3px rgba(240, 125, 16, 0.4);
-  --focus-outline: 2px solid rgba(240, 125, 16, 0.8);
+  --color-success-soft: #12301f;
+  --color-warning-soft: #33290a;
+  --color-danger-soft: #3a1818;
+  --color-info-soft: #16264a;
+  --color-neutral-soft: #2a2824;
+
+  --color-footer-bg: #0c0b0a;
+  --color-footer-text: #f2efea;
+  --color-overlay: rgba(0, 0, 0, 0.7);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.7);
 }
 
 *,
@@ -102,8 +160,9 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: var(--leading-normal);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -63,7 +63,7 @@ export function HomeHero() {
             size="lg"
             type="submit"
           >
-            Report lost item
+            Report a found item
           </Button>
         </form>
       </div>

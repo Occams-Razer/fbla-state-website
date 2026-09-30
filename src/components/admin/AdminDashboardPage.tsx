@@ -1,12 +1,7 @@
 "use client";
 
 import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
-import Fade from "@mui/material/Fade";
-import Skeleton from "@mui/material/Skeleton";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Tooltip from "@mui/material/Tooltip";
-import { Button, Card, Modal } from "@/components/ui";
+import { Alert, Button, Card, Modal, Skeleton, Tooltip, useToast } from "@/components/ui";
 import {
   clearClaimsByStatus,
   fetchAdminItemById,
@@ -57,13 +52,13 @@ function SkeletonCard() {
   return (
     <Card className={styles.entryCard}>
       <div className={styles.entryHeader}>
-        <Skeleton variant="text" width="55%" height={26} />
-        <Skeleton variant="rounded" width={70} height={22} />
+        <Skeleton height={26} width="55%" />
+        <Skeleton height={22} variant="block" width={70} />
       </div>
-      <Skeleton variant="text" width="35%" height={18} />
-      <Skeleton variant="text" width="40%" height={18} />
-      <Skeleton variant="text" width="30%" height={18} />
-      <Skeleton variant="rectangular" height={48} sx={{ mt: 1, borderRadius: 2 }} />
+      <Skeleton height={18} width="35%" />
+      <Skeleton height={18} width="40%" />
+      <Skeleton height={18} width="30%" />
+      <Skeleton height={48} variant="block" />
     </Card>
   );
 }
@@ -80,7 +75,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
   const [itemsError, setItemsError] = useState<string | null>(null);
   const [claimsError, setClaimsError] = useState<string | null>(null);
 
-  const [snackbar, setSnackbar] = useState<{ message: string; severity: "success" | "error" } | null>(null);
+  const toast = useToast();
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [clearingKey, setClearingKey] = useState<string | null>(null);
 
@@ -155,10 +150,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
     try {
       const updated = await updateItemStatus(item.id, { status: nextStatus });
       setItems((prev) => prev.map((e) => (e.id === item.id ? updated : e)));
-      setSnackbar({ message: `Item "${item.title}" marked ${nextStatus.toLowerCase()}.`, severity: "success" });
+      toast.success(`Item "${item.title}" marked ${nextStatus.toLowerCase()}.`);
       markStatsUpdated();
     } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not update item status.", severity: "error" });
+      toast.error(isApiError(error) ? error.message : "Could not update item status.");
     } finally {
       setActiveActionKey(null);
     }
@@ -179,10 +174,10 @@ export function AdminDashboardPage({ username }: { username: string }) {
           prev.map((item) => (item.id === updated.item!.id ? { ...item, ...updated.item } : item)),
         );
       }
-      setSnackbar({ message: `Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`, severity: "success" });
+      toast.success(`Claim by ${claim.name} marked ${nextStatus.toLowerCase()}.`);
       markStatsUpdated();
     } catch (error) {
-      setSnackbar({ message: isApiError(error) ? error.message : "Could not update claim status.", severity: "error" });
+      toast.error(isApiError(error) ? error.message : "Could not update claim status.");
     } finally {
       setActiveActionKey(null);
     }
@@ -235,16 +230,14 @@ export function AdminDashboardPage({ username }: { username: string }) {
     try {
       const { cleared } = await clearItemsByStatus(status);
       setItems((previous) => previous.filter((item) => item.status !== status));
-      setSnackbar({
-        message: `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
-        severity: "success",
-      });
+      toast.success(
+        `Cleared ${cleared} ${status.toLowerCase()} item${cleared === 1 ? "" : "s"}.`,
+      );
       markStatsUpdated();
     } catch (error) {
-      setSnackbar({
-        message: isApiError(error) ? error.message : "Could not clear items.",
-        severity: "error",
-      });
+      toast.error(
+        isApiError(error) ? error.message : "Could not clear items.",
+      );
     } finally {
       setClearingKey(null);
     }
@@ -261,16 +254,14 @@ export function AdminDashboardPage({ username }: { username: string }) {
     try {
       const { cleared } = await clearClaimsByStatus(status);
       setClaims((previous) => previous.filter((claim) => claim.status !== status));
-      setSnackbar({
-        message: `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
-        severity: "success",
-      });
+      toast.success(
+        `Cleared ${cleared} ${status.toLowerCase()} claim${cleared === 1 ? "" : "s"}.`,
+      );
       markStatsUpdated();
     } catch (error) {
-      setSnackbar({
-        message: isApiError(error) ? error.message : "Could not clear claims.",
-        severity: "error",
-      });
+      toast.error(
+        isApiError(error) ? error.message : "Could not clear claims.",
+      );
     } finally {
       setClearingKey(null);
     }
@@ -364,8 +355,8 @@ export function AdminDashboardPage({ username }: { username: string }) {
       </div>
 
       {/* Items panel */}
-      <Fade in={mainTab === "items"} timeout={250} unmountOnExit>
-        <section className={styles.section} role="tabpanel">
+      {mainTab === "items" ? (
+        <section className={`${styles.section} ${styles.fadeIn}`} role="tabpanel">
           {/* Sub-tabs */}
           <div className={styles.subTabHeader}>
             <div className={styles.subTabBar} role="tablist" aria-label="Item status tabs">
@@ -411,22 +402,17 @@ export function AdminDashboardPage({ username }: { username: string }) {
           ) : null}
 
           {!isLoadingItems && itemsError ? (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>{itemsError}</Alert>
+            <Alert variant="error">{itemsError}</Alert>
           ) : null}
 
           {!isLoadingItems && !itemsError && visibleItems.length === 0 ? (
-            <Fade in timeout={300}>
-              <div>
-                <Card variant="muted">
-                  <p className={styles.mutedText}>No items in this category.</p>
-                </Card>
-              </div>
-            </Fade>
+            <Card className={styles.fadeIn} variant="muted">
+              <p className={styles.mutedText}>No items in this category.</p>
+            </Card>
           ) : null}
 
           {!isLoadingItems && !itemsError && visibleItems.length > 0 ? (
-            <Fade in timeout={300}>
-              <div className={styles.list}>
+              <div className={`${styles.list} ${styles.fadeIn}`}>
                 {visibleItems.map((item) => {
                   const approveKey = `item:${item.id}:APPROVED`;
                   const rejectKey  = `item:${item.id}:REJECTED`;
@@ -453,8 +439,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                       </dl>
                       <p className={styles.description}>{item.description || "No description provided."}</p>
                       <div className={styles.actions}>
-                        <Tooltip title="Make this item visible to the public" arrow>
-                          <span>
+                        <Tooltip label="Make this item visible to the public">
                             <Button
                               disabled={activeActionKey === rejectKey || item.status === "APPROVED"}
                               loading={activeActionKey === approveKey}
@@ -467,10 +452,8 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             >
                               Approve
                             </Button>
-                          </span>
                         </Tooltip>
-                        <Tooltip title="Hide this item from the public" arrow>
-                          <span>
+                        <Tooltip label="Hide this item from the public">
                             <Button
                               disabled={activeActionKey === approveKey || item.status === "REJECTED"}
                               loading={activeActionKey === rejectKey}
@@ -483,21 +466,19 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             >
                               Reject
                             </Button>
-                          </span>
                         </Tooltip>
                       </div>
                     </Card>
                   );
                 })}
               </div>
-            </Fade>
           ) : null}
         </section>
-      </Fade>
+      ) : null}
 
       {/* Claims panel */}
-      <Fade in={mainTab === "claims"} timeout={250} unmountOnExit>
-        <section className={styles.section} role="tabpanel">
+      {mainTab === "claims" ? (
+        <section className={`${styles.section} ${styles.fadeIn}`} role="tabpanel">
           {/* Sub-tabs */}
           <div className={styles.subTabHeader}>
             <div className={styles.subTabBar} role="tablist" aria-label="Claim status tabs">
@@ -547,22 +528,17 @@ export function AdminDashboardPage({ username }: { username: string }) {
           ) : null}
 
           {!isLoadingClaims && claimsError ? (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>{claimsError}</Alert>
+            <Alert variant="error">{claimsError}</Alert>
           ) : null}
 
           {!isLoadingClaims && !claimsError && visibleClaims.length === 0 ? (
-            <Fade in timeout={300}>
-              <div>
-                <Card variant="muted">
-                  <p className={styles.mutedText}>No claims in this category.</p>
-                </Card>
-              </div>
-            </Fade>
+            <Card className={styles.fadeIn} variant="muted">
+              <p className={styles.mutedText}>No claims in this category.</p>
+            </Card>
           ) : null}
 
           {!isLoadingClaims && !claimsError && visibleClaims.length > 0 ? (
-            <Fade in timeout={300}>
-              <div className={styles.list}>
+              <div className={`${styles.list} ${styles.fadeIn}`}>
                 {visibleClaims.map((claim) => {
                   const approveKey = `claim:${claim.id}:APPROVED`;
                   const rejectKey  = `claim:${claim.id}:REJECTED`;
@@ -606,8 +582,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
                       </dl>
                       <p className={styles.description}>{claim.proofOfOwnership}</p>
                       <div className={styles.actions}>
-                        <Tooltip title="Approve this claim and notify the claimant" arrow>
-                          <span>
+                        <Tooltip label="Approve this claim and notify the claimant">
                             <Button
                               disabled={
                                 activeActionKey === rejectKey ||
@@ -625,10 +600,8 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             >
                               Approve
                             </Button>
-                          </span>
                         </Tooltip>
-                        <Tooltip title="Reject this ownership claim" arrow>
-                          <span>
+                        <Tooltip label="Reject this ownership claim">
                             <Button
                               disabled={
                                 activeActionKey === approveKey ||
@@ -646,11 +619,9 @@ export function AdminDashboardPage({ username }: { username: string }) {
                             >
                               Reject
                             </Button>
-                          </span>
                         </Tooltip>
                         {claim.status === "APPROVED" ? (
-                          <Tooltip title="Mark this approved claim as picked up" arrow>
-                            <span>
+                          <Tooltip label="Mark this approved claim as picked up">
                               <Button
                                 disabled={
                                   activeActionKey === approveKey ||
@@ -666,7 +637,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
                               >
                                 Mark Picked Up
                               </Button>
-                            </span>
                           </Tooltip>
                         ) : null}
                       </div>
@@ -674,10 +644,9 @@ export function AdminDashboardPage({ username }: { username: string }) {
                   );
                 })}
               </div>
-            </Fade>
           ) : null}
         </section>
-      </Fade>
+      ) : null}
 
       {/* Item detail modal */}
       <Modal
@@ -688,7 +657,7 @@ export function AdminDashboardPage({ username }: { username: string }) {
         {viewItemLoading ? (
           <div className={styles.modalLoading}>
             {[1, 2, 3].map((n) => (
-              <Skeleton key={n} variant="text" height={22} sx={{ borderRadius: 1 }} />
+              <Skeleton height={22} key={n} />
             ))}
           </div>
         ) : viewItem ? (
@@ -713,20 +682,6 @@ export function AdminDashboardPage({ username }: { username: string }) {
         )}
       </Modal>
 
-      {/* Snackbar for success/error feedback */}
-      <Snackbar
-        open={!!snackbar}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar(null)}
-      >
-        <Alert
-          severity={snackbar?.severity ?? "success"}
-          onClose={() => setSnackbar(null)}
-          sx={{ width: "100%", borderRadius: 2 }}
-        >
-          {snackbar?.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

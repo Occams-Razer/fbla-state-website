@@ -1,6 +1,6 @@
 .footer {
-  background: #3d3d3d;
-  color: #fff;
+  background: var(--color-footer-bg);
+  color: var(--color-footer-text);
   margin-top: auto;
 }
 
@@ -10,7 +10,7 @@
   gap: var(--space-4);
   grid-template-columns: 1fr auto 1fr;
   margin: 0 auto;
-  max-width: 1280px;
+  max-width: var(--layout-max);
   padding: var(--space-6);
   width: 100%;
 }
@@ -19,7 +19,7 @@
   align-items: center;
   display: inline-flex;
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   gap: 0.625rem;
   margin: 0;
@@ -32,18 +32,18 @@
 }
 
 .copy {
-  font-size: 1rem;
+  font-size: var(--text-base);
   margin: 0;
   text-align: center;
 }
 
 .year {
-  font-size: 1rem;
+  font-size: var(--text-base);
   justify-self: end;
   margin: 0;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .inner {
     grid-template-columns: 1fr;
     justify-items: center;

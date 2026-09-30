@@ -22,7 +22,7 @@
 
 .heading {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-size: var(--text-3xl);
   line-height: 1.2;
   margin: 0;
 }
@@ -47,7 +47,7 @@
 
 .errorText {
   color: var(--color-danger-text);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   margin: 0;
 }
 
@@ -70,7 +70,7 @@
 
 .resultLabel {
   color: var(--color-text-muted);
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
 }
 
 .resultValue {
@@ -80,7 +80,7 @@
 
 .statusBadge {
   border-radius: var(--radius-pill);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.03em;
   padding: 0.2rem 0.55rem;
@@ -89,7 +89,7 @@
 }
 
 .status_PENDING {
-  background: color-mix(in srgb, orange 14%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
   color: var(--color-on-tint);
 }
 
@@ -106,13 +106,13 @@
 .statusNote {
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   line-height: 1.55;
   margin: var(--space-1) 0 0;
   padding-top: var(--space-2);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .section {
     padding: var(--space-6) var(--space-4);
   }

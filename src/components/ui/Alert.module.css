@@ -1,0 +1,76 @@
+.alert {
+  align-items: flex-start;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  display: flex;
+  font-size: var(--text-sm);
+  gap: var(--space-3);
+  line-height: var(--leading-normal);
+  padding: var(--space-3) var(--space-4);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.variant_success {
+  background: var(--color-success-soft);
+  border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
+}
+
+.variant_success .icon {
+  color: var(--color-success-text);
+}
+
+.variant_error {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+.variant_error .icon {
+  color: var(--color-danger-text);
+}
+
+.variant_warning {
+  background: var(--color-warning-soft);
+  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.variant_warning .icon {
+  color: var(--color-warning-text);
+}
+
+.variant_info {
+  background: var(--color-info-soft);
+  border-color: color-mix(in srgb, var(--color-info) 45%, transparent);
+}
+
+.variant_info .icon {
+  color: var(--color-info-text);
+}
+
+.closeButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 1.5rem;
+  justify-content: center;
+  padding: 0;
+  width: 1.5rem;
+}
+
+.closeButton:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
