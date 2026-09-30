@@ -74,7 +74,7 @@
   width: clamp(12.5rem, 30vw, 24rem);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .shapeGreen {
     top: clamp(13rem, 24vw, 16rem);
   }
@@ -88,7 +88,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .shapeYellow {
     width: clamp(8rem, 22vw, 10rem);
   }

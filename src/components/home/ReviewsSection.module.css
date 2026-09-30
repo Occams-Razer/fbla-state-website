@@ -42,7 +42,7 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 4.8vw, 3.4rem);
+  font-size: var(--text-3xl);
   letter-spacing: -0.02em;
   line-height: 1.15;
   margin: 0;
@@ -50,7 +50,7 @@
 
 .subtitle {
   color: var(--color-text-muted);
-  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-size: var(--text-lead);
   margin: 0;
 }
 
@@ -83,13 +83,13 @@
 
 .star {
   color: var(--color-link);
-  font-size: 1rem;
+  font-size: var(--text-base);
 }
 
 .quote {
   color: var(--color-text);
   flex: 1;
-  font-size: 0.98rem;
+  font-size: var(--text-base);
   line-height: 1.65;
   margin: 0;
 }
@@ -103,28 +103,28 @@
 }
 
 .name {
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 700;
 }
 
 .role {
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 600px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .section::before,
   .section::after {
     display: none;

@@ -31,19 +31,19 @@
 }
 
 .size_sm {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   min-height: 2rem;
   padding: 0.5rem 0.8rem;
 }
 
 .size_md {
-  font-size: 1rem;
+  font-size: var(--text-base);
   min-height: 2.75rem;
   padding: 0.75rem 1rem;
 }
 
 .size_lg {
-  font-size: 1.05rem;
+  font-size: var(--text-base);
   min-height: 3.3rem;
   padding: 0.95rem 1.25rem;
 }
@@ -55,7 +55,7 @@
 
 .variant_primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
-  box-shadow: 0 4px 14px rgba(239, 116, 0, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 .variant_secondary {
@@ -84,7 +84,7 @@
 
 .variant_danger:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-danger) 88%, black);
-  box-shadow: 0 4px 14px rgba(220, 65, 65, 0.3);
+  box-shadow: var(--shadow-danger);
 }
 
 .variant_success {
@@ -94,7 +94,7 @@
 
 .variant_success:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-success) 88%, black);
-  box-shadow: 0 4px 14px rgba(18, 164, 75, 0.3);
+  box-shadow: var(--shadow-success);
 }
 
 .icon {
@@ -107,7 +107,7 @@
   animation: spin 0.9s linear infinite;
   border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
   border-right-color: currentColor;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   display: inline-block;
   height: 1rem;
   width: 1rem;

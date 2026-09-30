@@ -24,7 +24,7 @@ export function Navbar() {
     }
 
     const handleResize = () => {
-      if (window.innerWidth > 720) {
+      if (window.innerWidth > 768) {
         setIsMenuOpen(false);
       }
     };

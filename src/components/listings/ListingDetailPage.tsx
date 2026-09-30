@@ -3,8 +3,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import Alert from "@mui/material/Alert";
-import Snackbar from "@mui/material/Snackbar";
 import { Badge, Button, Card, Input, Modal } from "@/components/ui";
 import type { BadgeVariant } from "@/components/ui/Badge";
 import { createClaim, fetchItemById } from "@/lib/api";
@@ -101,7 +99,6 @@ export function ListingDetailPage() {
   const [formErrors, setFormErrors] = useState<ClaimFormErrors>({});
   const [claimSubmitError, setClaimSubmitError] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
-  const [claimSnackbarOpen, setClaimSnackbarOpen] = useState(false);
   const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
   const [copiedClaimId, setCopiedClaimId] = useState(false);
 
@@ -485,20 +482,6 @@ export function ListingDetailPage() {
           </div>
         </div>
       </Modal>
-
-      <Snackbar
-        autoHideDuration={4000}
-        onClose={() => setClaimSnackbarOpen(false)}
-        open={claimSnackbarOpen}
-      >
-        <Alert
-          onClose={() => setClaimSnackbarOpen(false)}
-          severity="success"
-          sx={{ borderRadius: 2, width: "100%" }}
-        >
-          Claim submitted successfully. An admin will review it soon.
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

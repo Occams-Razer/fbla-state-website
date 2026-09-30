@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import Alert from "@mui/material/Alert";
-import Snackbar from "@mui/material/Snackbar";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, Card, Input, useToast } from "@/components/ui";
 import { createItem, uploadItemImage } from "@/lib/api";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { isApiError } from "@/lib/api/errors";
 import type { CreateItemInput } from "@/lib/types";
 import styles from "./SubmitItemPage.module.css";
@@ -94,7 +93,7 @@ export function SubmitItemPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const toast = useToast();
 
   const isBusy = uploadStatus === "uploading" || isSubmitting;
 
@@ -135,6 +134,14 @@ export function SubmitItemPage() {
     if (!file.type.startsWith("image/")) {
       setUploadStatus("idle");
       setUploadError("Please upload an image file (PNG, JPG, or similar).");
+      setUploadedImageUrl(null);
+      setUploadedImageName(null);
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadStatus("idle");
+      setUploadError(`Images must be under ${MAX_UPLOAD_LABEL}.`);
       setUploadedImageUrl(null);
       setUploadedImageName(null);
       return;
@@ -187,7 +194,7 @@ export function SubmitItemPage() {
       setIsSubmitting(true);
       await createItem(payload);
       setSubmitSuccess("Item submitted. It is now pending admin review.");
-      setSnackbarOpen(true);
+      toast.success("Item submitted. It is now pending admin review.");
       setForm(INITIAL_FORM);
       setErrors({});
       setUploadedImageUrl(null);
@@ -384,20 +391,6 @@ export function SubmitItemPage() {
           </div>
         </form>
       </Card>
-
-      <Snackbar
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        open={snackbarOpen}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity="success"
-          sx={{ borderRadius: 2, width: "100%" }}
-        >
-          Item submitted. It is now pending admin review.
-        </Alert>
-      </Snackbar>
     </div>
   );
 }
