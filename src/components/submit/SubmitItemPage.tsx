@@ -6,6 +6,7 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { Button, Card, Input } from "@/components/ui";
 import { createItem, uploadItemImage } from "@/lib/api";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { isApiError } from "@/lib/api/errors";
 import type { CreateItemInput } from "@/lib/types";
 import styles from "./SubmitItemPage.module.css";
@@ -135,6 +136,14 @@ export function SubmitItemPage() {
     if (!file.type.startsWith("image/")) {
       setUploadStatus("idle");
       setUploadError("Please upload an image file (PNG, JPG, or similar).");
+      setUploadedImageUrl(null);
+      setUploadedImageName(null);
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadStatus("idle");
+      setUploadError(`Images must be under ${MAX_UPLOAD_LABEL}.`);
       setUploadedImageUrl(null);
       setUploadedImageName(null);
       return;
